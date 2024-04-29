@@ -1,13 +1,12 @@
 
 import javax.swing.*;
+import javax.swing.border.Border;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,13 +14,16 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Random;
 
-public class Card extends JLabel implements MouseMotionListener, MouseListener, ComponentListener {
+public class Card extends JPanel implements MouseListener {
 
   // Variables estaticas para las dimensiones (Por si se necesita saber de forma externa)
   public static int CARD_HEIGHT = 250, CARD_WIDTH = CARD_HEIGHT/100 * 80;
 
   // Color de la carta
   private CardColor color;
+
+  // Bordes
+  private Border border, selectBorder;
 
   // Tipo de carta
   private CardType type;
@@ -45,17 +47,24 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
   // Variables para el icono de en medio y para los de las esquinas
   private ImageIcon miniIcon, iconType;
   private JLabel miniTop, miniBot, mid;
+  private JPanel interno;
 
   public Card(CardColor color, CardType type) {
     super();
     this.height = CARD_HEIGHT;
     this.width = CARD_WIDTH;
-    this.thickness = width/100 * 8; // 8% del ancho
+    this.thickness = width/100 * 7; // 7% del ancho
 
     setPreferredSize(new Dimension(width, height));
     setSize(width, height);
     setLayout(new BorderLayout(0,0));
-    setBorder(BorderFactory.createLineBorder(Color.WHITE, thickness, true));
+    selectBorder = BorderFactory.createLineBorder(Color.WHITE, 1, true);
+    setBorder(selectBorder);
+
+    border = BorderFactory.createLineBorder(Color.WHITE, thickness, true);
+    interno = new JPanel(new BorderLayout(0,0));
+    interno.setOpaque(false);
+    interno.setBorder(border);
 
     this.color = color;
     this.type = type;
@@ -83,12 +92,13 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
     bot.setOpaque(false);
     bot.add(miniBot);
 
-    add(top, BorderLayout.NORTH);
-    add(mid, BorderLayout.CENTER);
-    add(bot, BorderLayout.SOUTH);
-    addMouseMotionListener(this);
+    interno.add(top, BorderLayout.NORTH);
+    interno.add(mid, BorderLayout.CENTER);
+    interno.add(bot, BorderLayout.SOUTH);
+
+    add(interno, BorderLayout.CENTER);
+
     addMouseListener(this);
-    addComponentListener(this);
 
     animTimer = new Timer(1, null);
     updateOriginalPos();
@@ -110,7 +120,7 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
     int ovalW = getWidth()*90/100; // 90% del ancho
     int ovalH = getHeight()*85/100; // 85% del alto
     g2d.rotate(Math.toRadians(25));
-    g2d.translate(getWidth()/3, -getHeight()/10); // 33% del ancho y 10% del alto
+    g2d.translate(getWidth()/3, -getHeight()/10 -1); // 33% del ancho y 10% del alto
     g2d.setColor(Color.WHITE);
     g2d.fillOval(0 , 0 , ovalW, ovalH);
 
@@ -205,7 +215,12 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
   }
 
   public int getColorInt() { return color.getColorInt(); }
+
   public CardType getCardType() { return type; }
+
+  public boolean isValid(Card card) {
+    return card.getCardType().equals(this.getCardType()) && card.getColorInt() == this.getColorInt();
+  }
 
   public static Comparator<Card> getColorComparator() {
     return new Comparator<Card>() {
@@ -225,24 +240,7 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
     };
   }
 
-  @Override
-  public void mouseDragged(MouseEvent e) {
-    Point centro = SwingUtilities.convertPoint(this, e.getPoint(), getParent());
-    centro.translate(-getWidth()/2, -getHeight()/2);
-    setLocation(centro);
-  }
-
-  @Override public void mouseMoved(MouseEvent e) {}
-  @Override public void componentResized(ComponentEvent e) {}
-
-  @Override public void componentMoved(ComponentEvent e) {
-    pos = getLocation();
-  }
-
-  @Override public void componentShown(ComponentEvent e) {}
-
-  @Override public void componentHidden(ComponentEvent e) {}
-
+  
   @Override public void mouseClicked(MouseEvent e) {
     if(selectFx != null)
       selectFx.stop();
@@ -257,6 +255,8 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
   @Override
   public void mouseEntered(MouseEvent e) {
     setCursor(new Cursor(Cursor.HAND_CURSOR));
+    selectBorder = BorderFactory.createLineBorder(Color.YELLOW, 2, true);
+    setBorder(selectBorder);
     if(!animTimer.isRunning()) {
       if(hoverFx != null)
         hoverFx.stop();
@@ -269,6 +269,8 @@ public class Card extends JLabel implements MouseMotionListener, MouseListener, 
 
   @Override
   public void mouseExited(MouseEvent e) {
+    selectBorder = BorderFactory.createLineBorder(Color.WHITE, 1, true);
+    setBorder(selectBorder);
     if(!animTimer.isRunning())
       hoverAnimacion(hoverTargetPos, originalPos);
   }

@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseListener;
 
 public class PlayerDeck extends JPanel {
   private LinkedList<Card> cartasLista;
@@ -17,7 +18,7 @@ public class PlayerDeck extends JPanel {
   private JButton ordenarColor, ordernarTipo;
   private Font miniFont = new Font("Consolas", Font.BOLD, 12);
 
-  private Audio ordenarFx;
+  private Audio ordenarFx, cambiarFx;
 
 
   public PlayerDeck(LinkedList<Card> cartasIniciales) {
@@ -31,13 +32,24 @@ public class PlayerDeck extends JPanel {
     deckPanel.setBackground(Color.GRAY);
 
     botonesPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    botonesPanel.setSize(getWidth(), 20);
     botonesPanel.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
 
     izq = new JButton("<");
-    izq.addActionListener((e) -> { displayPrev5(); });
+    izq.addActionListener((e) -> { 
+      if(cambiarFx != null)
+        cambiarFx.stop();
+      cambiarFx = new Audio("sfx/hover1.wav");
+      cambiarFx.play();
+      displayPrev5(); 
+    });
     der = new JButton(">");
-    der.addActionListener((e) -> { displayNext5(); });
+    der.addActionListener((e) -> { 
+      if(cambiarFx != null)
+        cambiarFx.stop();
+      cambiarFx = new Audio("sfx/hover1.wav");
+      cambiarFx.play();
+      displayNext5(); 
+    });
 
     ordenarColor = new JButton("C");
     ordenarColor.setFont(miniFont);
@@ -82,14 +94,38 @@ public class PlayerDeck extends JPanel {
     displayNext5();
   }
 
+  public void addCard(Card card) {
+    cartasLista.add(card);
+    update();
+  }
+
+  public Card removeCard(int index) {
+    Card c = cartasLista.remove(index);
+    update();
+    return c;
+  }
+
+  public void removeCard(Card c) {
+    cartasLista.remove(c);
+    update();
+  }
+
+  // Agrega un mouseListener a todas las cartas del mazo
+  public void addCardMouseListener(MouseListener mouseListener) {
+    for(Card c : cartasLista)
+      c.addMouseListener(mouseListener);
+    update();
+  }
+
   private void update() {
+    distribuir();
     deckPanel.removeAll();
     int x = 30;
     for(Card card : cartasDistribuidas.get(index)) {
       card.setBounds(x, 50, card.getWidth(), card.getHeight());
       card.updateOriginalPos();
       deckPanel.add(card);
-      x += card.getWidth() + 15;
+      x += card.getWidth() +15;
     }
     deckPanel.revalidate();
     deckPanel.repaint();
@@ -98,12 +134,12 @@ public class PlayerDeck extends JPanel {
 
   private void distribuir() {
     cartasDistribuidas.clear();
-    ArrayList<Card> buffer5 = new ArrayList<>();
+    ArrayList<Card> buffer = new ArrayList<>();
     for(int i = 0; i < cartasLista.size(); i++) {
-      buffer5.add(cartasLista.get(i));
+      buffer.add(cartasLista.get(i));
       if(((i+1) % 5 == 0 && i != 0) || (i+1) == cartasLista.size()) {
-        cartasDistribuidas.add((ArrayList<Card>)buffer5.clone());
-        buffer5.clear();
+        cartasDistribuidas.add((ArrayList<Card>)buffer.clone());
+        buffer.clear();
       }
     }
   }
@@ -124,13 +160,11 @@ public class PlayerDeck extends JPanel {
 
   private void ordenarColor() {
     Collections.sort(cartasLista, Card.getColorComparator());
-    distribuir();
     update();
   }
 
   private void ordenarTipo() {
     Collections.sort(cartasLista, Card.getTypeComparator());
-    distribuir();
     update();
   }
 

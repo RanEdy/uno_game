@@ -43,7 +43,7 @@ public class CardColor {
   public GradientPaint getGradiente(int width, int height) {
     Point p1 = new Point(0, height);
     Point p2 = new Point(width, height);
-    gradiente = new GradientPaint(p2, color, p1, color.darker());
+    gradiente = new GradientPaint(p2, color.brighter(), p1, color.darker());
     return gradiente;
   }
 
