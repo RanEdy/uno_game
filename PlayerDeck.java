@@ -9,6 +9,7 @@ import java.awt.event.MouseListener;
 public class PlayerDeck extends JPanel {
   private LinkedList<Card> cartasLista;
   private LinkedList<ArrayList<Card>> cartasDistribuidas;
+  private ArrayList<MouseListener> mouseListeners;
   private int index = -1;
 
   private JPanel deckPanel;
@@ -38,7 +39,7 @@ public class PlayerDeck extends JPanel {
     izq.addActionListener((e) -> { 
       if(cambiarFx != null)
         cambiarFx.stop();
-      cambiarFx = new Audio("sfx/hover1.wav");
+      cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
       cambiarFx.play();
       displayPrev5(); 
     });
@@ -46,7 +47,7 @@ public class PlayerDeck extends JPanel {
     der.addActionListener((e) -> { 
       if(cambiarFx != null)
         cambiarFx.stop();
-      cambiarFx = new Audio("sfx/hover1.wav");
+      cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
       cambiarFx.play();
       displayNext5(); 
     });
@@ -56,7 +57,7 @@ public class PlayerDeck extends JPanel {
     ordenarColor.addActionListener((e) -> { 
       if(ordenarFx != null)
         ordenarFx.stop();
-      ordenarFx = new Audio("sfx/swap1.wav");
+      ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
       ordenarFx.play();
       ordenarColor(); 
     });
@@ -66,7 +67,7 @@ public class PlayerDeck extends JPanel {
     ordernarTipo.addActionListener((e) -> { 
       if(ordenarFx != null)
         ordenarFx.stop();
-      ordenarFx = new Audio("sfx/swap1.wav");
+      ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
       ordenarFx.play();
       ordenarTipo();
     });
@@ -76,6 +77,7 @@ public class PlayerDeck extends JPanel {
 
     cartasLista = cartasIniciales;
     cartasDistribuidas = new LinkedList<>();
+    mouseListeners = new ArrayList<>();
 
     add(deckPanel, BorderLayout.CENTER);
     add(izq, BorderLayout.WEST);
@@ -87,8 +89,9 @@ public class PlayerDeck extends JPanel {
 
   public void reset(LinkedList<Card> nuevasCartas) {
     cartasDistribuidas.clear();
-    cartasLista.clear();
-    cartasLista = nuevasCartas;
+    //cartasLista.clear();
+    cartasLista = (LinkedList<Card>) nuevasCartas.clone();
+    updateMouseListeners();
     distribuir();
     index = -1;
     displayNext5();
@@ -112,20 +115,30 @@ public class PlayerDeck extends JPanel {
 
   // Agrega un mouseListener a todas las cartas del mazo
   public void addCardMouseListener(MouseListener mouseListener) {
-    for(Card c : cartasLista)
-      c.addMouseListener(mouseListener);
+    mouseListeners.add(mouseListener);
     update();
   }
 
+  private void updateMouseListeners() {
+    for(Card c : cartasLista)
+      for(MouseListener ml : mouseListeners) {
+        c.removeMouseListener(ml);
+        c.addMouseListener(ml);
+      }
+  }
+
   private void update() {
-    distribuir();
     deckPanel.removeAll();
-    int x = 30;
-    for(Card card : cartasDistribuidas.get(index)) {
-      card.setBounds(x, 50, card.getWidth(), card.getHeight());
-      card.updateOriginalPos();
-      deckPanel.add(card);
-      x += card.getWidth() +15;
+    if(cartasLista.size() >= 1) {
+      updateMouseListeners();
+      distribuir();
+      int x = 30;
+      for(Card card : cartasDistribuidas.get(index)) {
+        card.setBounds(x, 50, card.getWidth(), card.getHeight());
+        card.updateOriginalPos();
+        deckPanel.add(card);
+        x += card.getWidth() +15;
+      }
     }
     deckPanel.revalidate();
     deckPanel.repaint();
@@ -145,17 +158,21 @@ public class PlayerDeck extends JPanel {
   }
 
   private void displayNext5() {
-    index = (index + 1) % cartasDistribuidas.size();
-    update();
+    if(cartasDistribuidas.size() >= 1) {
+      index = (index + 1) % cartasDistribuidas.size();
+      update();
+    }
   }
 
   private void displayPrev5() {
-    index--;
-    if(index < 0)
-      index = cartasDistribuidas.size()-1;
-    else
-      index = index % cartasDistribuidas.size();
-    update();
+    if(cartasDistribuidas.size() >= 1) {
+      index--;
+      if(index < 0)
+        index = cartasDistribuidas.size()-1;
+      else
+        index = index % cartasDistribuidas.size();
+      update();
+    }
   }
 
   private void ordenarColor() {

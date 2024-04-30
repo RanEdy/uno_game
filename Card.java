@@ -16,8 +16,11 @@ import java.util.Random;
 
 public class Card extends JPanel implements MouseListener {
 
-  // Variables estaticas para las dimensiones (Por si se necesita saber de forma externa)
+  // Variables estaticas para las dimensiones bases (Por si se necesita saber de forma externa)
   public static int CARD_HEIGHT = 250, CARD_WIDTH = CARD_HEIGHT/100 * 80;
+
+  // Variable para controlar el estado de la carta
+  private boolean isJugable = true;
 
   // Color de la carta
   private CardColor color;
@@ -47,6 +50,8 @@ public class Card extends JPanel implements MouseListener {
   // Variables para el icono de en medio y para los de las esquinas
   private ImageIcon miniIcon, iconType;
   private JLabel miniTop, miniBot, mid;
+
+  // Variable del panel interno (El que lleva el borde blanco)
   private JPanel interno;
 
   public Card(CardColor color, CardType type) {
@@ -155,6 +160,8 @@ public class Card extends JPanel implements MouseListener {
     repaint();
   }
 
+  public Card copy() { return new Card(color, type); }
+
   public static LinkedList<Card> generarBaraja() {
     LinkedList<Card> cartas = new LinkedList<>();
     //Cartas comunes hasta el de Comer
@@ -180,20 +187,22 @@ public class Card extends JPanel implements MouseListener {
   }
   
   public static LinkedList<Card> randomCartas(LinkedList<Card> baraja, int max) {
+    LinkedList<Card> barajaClone = (LinkedList<Card>) baraja.clone();
     LinkedList<Card> cartas = new LinkedList<>();
     Random random = new Random();
     ArrayList<Integer> nums = new ArrayList<>();
     int num = 0;
     for(int i = 0; i < max; i++) {
       do {
-        num = random.nextInt(baraja.size());
+        num = random.nextInt(barajaClone.size());
       } while(nums.contains(num));
       nums.add(num);
-      Card card = baraja.get(num);
+      Card card = barajaClone.get(num);
       cartas.add(card);
     }
     return cartas;
   }
+
 
   public void updateOriginalPos() { originalPos = getLocation(); }
 
@@ -203,6 +212,7 @@ public class Card extends JPanel implements MouseListener {
     animTimer = new Timer(1, new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
+        // Validar el cursor dentro de aqui
         if(time >= hoverDuration) {
           ((Timer) e.getSource()).stop();
           time = 0;
@@ -218,9 +228,16 @@ public class Card extends JPanel implements MouseListener {
 
   public CardType getCardType() { return type; }
 
+  public void setJugable(boolean isJugable) { this.isJugable = isJugable; }
+
   public boolean isValid(Card card) {
-    return card.getCardType().equals(this.getCardType()) && card.getColorInt() == this.getColorInt();
+    if(card == null)
+      return false;
+    if(this.getColorInt() == CardColor.BLACK)
+      return true;
+    return card.getCardType().equals(this.getCardType()) || card.getColorInt() == this.getColorInt();
   }
+
 
   public static Comparator<Card> getColorComparator() {
     return new Comparator<Card>() {
@@ -242,28 +259,34 @@ public class Card extends JPanel implements MouseListener {
 
   
   @Override public void mouseClicked(MouseEvent e) {
-    if(selectFx != null)
-      selectFx.stop();
-    selectFx = new Audio("sfx/select3.wav");
-    selectFx.play();
+    if(isJugable) {
+      time = 0;
+      animTimer.stop();
+      if(selectFx != null)
+        selectFx.stop();
+      selectFx = new Audio("sfx/select3.wav", 0.8f);
+      selectFx.play();
+    }
   }
 
   @Override public void mousePressed(MouseEvent e) {}
 
-  @Override public void mouseReleased(MouseEvent e) { setLocation(originalPos);}
+  @Override public void mouseReleased(MouseEvent e) { if(isJugable) setLocation(originalPos);}
 
   @Override
   public void mouseEntered(MouseEvent e) {
-    setCursor(new Cursor(Cursor.HAND_CURSOR));
-    selectBorder = BorderFactory.createLineBorder(Color.YELLOW, 2, true);
-    setBorder(selectBorder);
-    if(!animTimer.isRunning()) {
-      if(hoverFx != null)
-        hoverFx.stop();
-      hoverFx = new Audio("sfx/hover2.wav");
-      hoverFx.play();
-      hoverTargetPos = new Point(originalPos.x, originalPos.y - hover_Y);
-      hoverAnimacion(originalPos, hoverTargetPos);
+    if(isJugable) {
+      setCursor(new Cursor(Cursor.HAND_CURSOR));
+      selectBorder = BorderFactory.createLineBorder(Color.YELLOW, 2, true);
+      setBorder(selectBorder);
+      if(!animTimer.isRunning()) {
+        if(hoverFx != null)
+          hoverFx.stop();
+        hoverFx = new Audio("sfx/hover2.wav", 0.8f);
+        hoverFx.play();
+        hoverTargetPos = new Point(originalPos.x, originalPos.y - hover_Y);
+        hoverAnimacion(originalPos, hoverTargetPos);
+      }
     }
   }
 
@@ -271,12 +294,10 @@ public class Card extends JPanel implements MouseListener {
   public void mouseExited(MouseEvent e) {
     selectBorder = BorderFactory.createLineBorder(Color.WHITE, 1, true);
     setBorder(selectBorder);
-    if(!animTimer.isRunning())
+    if(!animTimer.isRunning() && isJugable)
       hoverAnimacion(hoverTargetPos, originalPos);
   }
 
   @Override
-  public String toString() {
-    return type.toString() + " | " + color.getColorName();
-  }
+  public String toString() { return type.toString() + " | " + color.getColorName(); }
 }

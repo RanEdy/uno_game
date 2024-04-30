@@ -1,9 +1,10 @@
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Stack;
 
 import javax.swing.*;
 
@@ -14,6 +15,9 @@ public class ManejadorMesa extends JFrame {
 
   static int CARTAS_INICIALES = 7;
 
+  static Stack<Card> pilaTiradas;
+  static JPanel pilaTiradasPanel;
+
   public ManejadorMesa() {
     super();
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -22,26 +26,65 @@ public class ManejadorMesa extends JFrame {
     setSize(screenDim);
     setResizable(false);
 
+
     LinkedList<Card> baraja = Card.generarBaraja();
-    Queue<Card> pilaTiradas = new LinkedList<>();
+    pilaTiradas = new Stack<>();
     LinkedList<Card> cartas = Card.randomCartas(baraja, CARTAS_INICIALES);
+
+    Card referencia = baraja.getLast();
+    pilaTiradasPanel = new JPanel(new BorderLayout(0,0));
+    pilaTiradasPanel.setBorder(BorderFactory.createRaisedBevelBorder());
+    pilaTiradasPanel.setBounds(
+      getWidth()/2 -referencia.getWidth()/2,
+      getHeight()/2 -referencia.getHeight()/2 -100,
+      referencia.getWidth(), 
+      referencia.getHeight()
+    );
+
     PlayerDeck playerDeck = new PlayerDeck(cartas);
     playerDeck.setLocation(getWidth()/2 - playerDeck.getWidth()/2, getHeight()-playerDeck.getHeight()-50);
+    // Esta funcionalidad deberia agregarse desde el lado del server
     playerDeck.addCardMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        // Aqui agregar la funcionalidad al hacer click a la carta
         Card carta = (Card) e.getSource();
-        System.out.println("Carta clickeada > " + carta);
+        Card tope = null;
+        if(!pilaTiradas.isEmpty())
+          tope = pilaTiradas.peek();
+        if(pilaTiradas.isEmpty() || carta.isValid(tope)) {
+          carta.removeMouseListener(this);
+          playerDeck.removeCard(carta);
+          Card copia = carta.copy();
+          copia.escalar(0.5);
+          copia.setJugable(false);
+          pilaTiradas.push(copia);
+          updatePilaTiradas();
+        }
       }
     });
 
     JButton resetB = new JButton("Reset");
     resetB.setBounds(100, 400, 100, 20);
-    resetB.addActionListener((e) -> { playerDeck.reset(Card.randomCartas(baraja, CARTAS_INICIALES));});
+    resetB.addActionListener((e) -> { 
+      playerDeck.reset(Card.randomCartas(baraja, CARTAS_INICIALES));
+      repaint();
+      pilaTiradasPanel.repaint();
+    });
 
     add(playerDeck);
+    add(pilaTiradasPanel);
     add(resetB);
     setVisible(true);
+  }
+
+  public static void updatePilaTiradas() {
+    Card tope = pilaTiradas.peek();
+    if(tope != null) {
+      pilaTiradasPanel.removeAll();
+      pilaTiradasPanel.add(tope, BorderLayout.CENTER);
+      tope.updateOriginalPos();
+      pilaTiradasPanel.revalidate();
+      pilaTiradasPanel.repaint();
+    }
   }
 }
