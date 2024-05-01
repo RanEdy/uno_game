@@ -58,7 +58,8 @@ public class ManejadorMesa extends JFrame {
           copia.escalar(0.5);
           copia.setJugable(false);
           pilaTiradas.push(copia);
-          updatePilaTiradas();
+          // Animacion y dentro hacer:
+            updatePilaTiradas();
         }
       }
     });
