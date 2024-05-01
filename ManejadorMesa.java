@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,13 +11,16 @@ import javax.swing.*;
 
 public class ManejadorMesa extends JFrame {
 
-  static Dimension screenDim = Toolkit.getDefaultToolkit().getScreenSize();
-  static Dimension winDim = new Dimension(screenDim.width/10 * 9, screenDim.height/10 * 9);
+  Dimension screenDim = Toolkit.getDefaultToolkit().getScreenSize();
+  Dimension winDim = new Dimension(screenDim.width/10 * 9, screenDim.height/10 * 9);
 
-  static int CARTAS_INICIALES = 7;
+  int CARTAS_INICIALES = 7;
 
-  static Stack<Card> pilaTiradas;
-  static JPanel pilaTiradasPanel;
+  Stack<Card> pilaTiradas;
+  JPanel pilaTiradasPanel;
+
+  Timer animTimer = new Timer(1, null);
+  int time = 0;
 
   public ManejadorMesa() {
     super();
@@ -48,18 +52,26 @@ public class ManejadorMesa extends JFrame {
       @Override
       public void mouseClicked(MouseEvent e) {
         Card carta = (Card) e.getSource();
+        Point cartaPos = carta.getLocationOnScreen();
+
         Card tope = null;
         if(!pilaTiradas.isEmpty())
           tope = pilaTiradas.peek();
         if(pilaTiradas.isEmpty() || carta.isValid(tope)) {
           carta.removeMouseListener(this);
           playerDeck.removeCard(carta);
+
           Card copia = carta.copy();
           copia.escalar(0.5);
           copia.setJugable(false);
+
+          Point pilaPos = pilaTiradasPanel.getLocation();
+          copia.setLocation(cartaPos);
+          add(copia);
+
+          toPilaAnimation(copia, cartaPos, pilaPos);
+
           pilaTiradas.push(copia);
-          // Animacion y dentro hacer:
-            updatePilaTiradas();
         }
       }
     });
@@ -78,7 +90,7 @@ public class ManejadorMesa extends JFrame {
     setVisible(true);
   }
 
-  public static void updatePilaTiradas() {
+  public void updatePilaTiradas() {
     Card tope = pilaTiradas.peek();
     if(tope != null) {
       pilaTiradasPanel.removeAll();
@@ -86,6 +98,26 @@ public class ManejadorMesa extends JFrame {
       tope.updateOriginalPos();
       pilaTiradasPanel.revalidate();
       pilaTiradasPanel.repaint();
+    }
+  }
+
+  public synchronized void toPilaAnimation(Card card, Point inicio, Point fin) {
+    int animDuration = 20;
+    if(animTimer != null) {
+      animTimer.stop();
+      animTimer = new Timer(1, (e) -> {
+          if(time >= animDuration) {
+            ((Timer) e.getSource()).stop();
+            time = 0;
+            updatePilaTiradas();
+            remove(card);
+            repaint();
+            return;
+          }
+          card.setLocation(Animacion.ease_in(inicio, fin, (double)time/(double)animDuration));
+          time++;
+      });
+      animTimer.start();
     }
   }
 }
