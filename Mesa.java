@@ -172,11 +172,15 @@ public class Mesa extends JPanel {
     g2d.fillRect(0, 0, getWidth(), getHeight());
 
     //radius = 100;
+    circ_centro = new Point2D.Double(center.getX(), center.getY()-80);
+    focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
     RadialGradientPaint centroGradiente = new RadialGradientPaint(circ_centro, radius, focus, dist2, centroColors, CycleMethod.NO_CYCLE);
     g2d.setPaint(centroGradiente);
     g2d.fillRect(0, 0, getWidth(), getHeight());
 
 
+    // Circulos intersectando
+    /* 
     circ_centro = new Point2D.Double(0, center.getY());
     focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
     radius = 100;
@@ -206,6 +210,7 @@ public class Mesa extends JPanel {
     RadialGradientPaint p8 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);
     g2d.setPaint(p8);
     g2d.fillRect(0, 0, getWidth(), getHeight());
+    */
 
   }
   
