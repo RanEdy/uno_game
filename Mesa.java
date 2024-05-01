@@ -105,6 +105,8 @@ public class Mesa extends JPanel {
 
   public synchronized void toPilaAnimation(Card card, Point inicio, Point fin) {
     int animDuration = 30;
+    int cardZ = getComponentZOrder(card);
+    setComponentZOrder(card, 0);
     if(animTimer != null) {
       animTimer = new Timer(1, (e) -> {
           if(time >= animDuration) {
@@ -113,6 +115,7 @@ public class Mesa extends JPanel {
             updatePilaTiradas();
             remove(card);
             repaint();
+
             return;
           }
           card.setLocation(Animacion.ease_in(inicio, fin, (double)time/(double)animDuration));
@@ -162,9 +165,9 @@ public class Mesa extends JPanel {
     Point2D circ_centro = new Point2D.Double(center.getX(), center.getY()-80);
     Point2D focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY()+30);
     float[] dist = {0.3f, 0.5f, 1.0f};
-    float[] dist2 = {0.3f, 0.7f, 1.0f};
-    Color[] colors3 = {new Color(200, 0, 0, alpha), new Color(200, 100, 30, alpha), new Color(250, 0, 0, alpha)};
-    Color[] centroColors = { new Color(255, 150, 30, 200), new Color(200, 0, 0, 200), new Color(255, 255, 255, 1)};
+    float[] dist2 = {0.5f, 1.0f};
+    Color[] colors3 = {new Color(200, 0, 0, alpha), new Color(200, 100, 30, alpha), new Color(250, 0, 0, 0)};
+    Color[] centroColors = { new Color(255, 120, 30, 200), new Color(255, 255, 255, 0)};
 
 
     RadialGradientPaint p4 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);

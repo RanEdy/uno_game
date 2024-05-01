@@ -49,7 +49,7 @@ public class PlayerDeck extends JPanel {
     deckPanel.setPreferredSize(new Dimension(720, 200));
     deckPanel.setOpaque(false);
     deckPanel.setBackground(new Color(0,0,0,0));
-    deckPanel.setBorder(BorderFactory.createLineBorder(new Color(0,0,0, 30), 2, true));
+    deckPanel.setBorder(BorderFactory.createLineBorder(new Color(255,255, 255, 20), 2, true));
 
     botonesPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     botonesPanel.setOpaque(false);
@@ -57,8 +57,8 @@ public class PlayerDeck extends JPanel {
     botonesPanel.setBorder(null);
 
     JPanel support = new JPanel(new BorderLayout(0,0));
-    support.setBorder(BorderFactory.createLineBorder(new Color(0,0,0, 30), 2, true));
-    support.setBackground(new Color(255,255,0, 20));
+    support.setBorder(BorderFactory.createRaisedBevelBorder());
+    support.setBackground(new Color(255,255,0, 30));
 
     izq = new JButton(botonIzqIcon);
     izq.setFont(botonesFont);
@@ -202,13 +202,15 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
-  public Card removeCard(int index) {
-    Card c = cartasLista.remove(index);
+  public Card removeCard(int i) {
+    index = 0;
+    Card c = cartasLista.remove(i);
     update();
     return c;
   }
 
   public void removeCard(Card c) {
+    index = 0;
     cartasLista.remove(c);
     update();
   }
