@@ -3,86 +3,186 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+
 import java.awt.*;
+import java.awt.event.ComponentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 public class PlayerDeck extends JPanel {
   private LinkedList<Card> cartasLista;
   private LinkedList<ArrayList<Card>> cartasDistribuidas;
   private ArrayList<MouseListener> mouseListeners;
+  private ArrayList<ComponentListener> componentListeners;
   private int index = -1;
 
   private JPanel deckPanel;
   private JPanel botonesPanel;
 
   private JButton izq, der;
-  private JButton ordenarColor, ordernarTipo;
-  private Font miniFont = new Font("Consolas", Font.BOLD, 12);
+  private JButton ordenarColor, ordenarTipo;
+  private Font botonesFont = new Font("Consolas", Font.BOLD, 20);
+  private Color botonesColor = new Color(255, 120, 0);
+  private Border botonesBorder = BorderFactory.createLineBorder(new Color(0,0,0, 30), 3, true);
+  private Dimension botonesFlechasDimension = new Dimension(90, 230);
+  private Dimension botonesOrdenarDimension = new Dimension(30, 30);
+  private ImageIcon botonDerIcon = generarImagen(new ImageIcon("iconos/der.png"), botonesFlechasDimension.width, botonesFlechasDimension.height);
+  private ImageIcon botonDerIconSelected = generarImagen(new ImageIcon("iconos/der_hover.png"), botonesFlechasDimension.width, botonesFlechasDimension.height);
+  private ImageIcon botonIzqIcon = generarImagen(new ImageIcon("iconos/izq.png"), botonesFlechasDimension.width, botonesFlechasDimension.height);
+  private ImageIcon botonIzqIconSelected = generarImagen(new ImageIcon("iconos/izq_hover.png"), botonesFlechasDimension.width, botonesFlechasDimension.height);
+
+  private Font miniFont = new Font("Consolas", Font.BOLD, 14);
 
   private Audio ordenarFx, cambiarFx;
 
 
   public PlayerDeck(LinkedList<Card> cartasIniciales) {
     super();
-    setLayout(new BorderLayout(0,0));
-    setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
-    setSize(600, 220);
+    setLayout(new BorderLayout(20,0));
+    setBorder(null);
+    setOpaque(false);
+    setSize(720, 230);
 
     deckPanel = new JPanel(null);
-    deckPanel.setPreferredSize(new Dimension(600, 200));
-    deckPanel.setBackground(Color.GRAY);
+    deckPanel.setPreferredSize(new Dimension(720, 200));
+    deckPanel.setOpaque(false);
+    deckPanel.setBackground(new Color(0,0,0,0));
+    deckPanel.setBorder(BorderFactory.createLineBorder(new Color(0,0,0, 30), 2, true));
 
     botonesPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    botonesPanel.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY, 1));
+    botonesPanel.setOpaque(false);
+    botonesPanel.setBackground(new Color(0,0,0,0));
+    botonesPanel.setBorder(null);
 
-    izq = new JButton("<");
+    JPanel support = new JPanel(new BorderLayout(0,0));
+    support.setBorder(BorderFactory.createLineBorder(new Color(0,0,0, 30), 2, true));
+    support.setBackground(new Color(255,255,0, 20));
+
+    izq = new JButton(botonIzqIcon);
+    izq.setFont(botonesFont);
+    izq.setBorder(null);
+    izq.setContentAreaFilled(false);
+    izq.setPreferredSize(botonesFlechasDimension);
     izq.addActionListener((e) -> { 
       if(cambiarFx != null)
         cambiarFx.stop();
       cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
       cambiarFx.play();
-      displayPrev5(); 
+      displayPrev5();
+      getParent().repaint();
     });
-    der = new JButton(">");
+    // Se tiene que hacer esto para repintar el fondo y que se siga viendo transparente (Cosas de Swing xd)
+    izq.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        getParent().repaint();
+      }
+
+      @Override
+      public void mouseEntered(MouseEvent e) {
+        izq.setIcon(botonIzqIconSelected);
+      }
+
+      @Override
+      public void mouseExited(MouseEvent e) {
+        izq.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        izq.setIcon(botonIzqIcon);
+      }
+    });
+
+
+    der = new JButton(botonDerIcon);
+    der.setFont(botonesFont);
+    der.setBorder(null);
+    der.setPreferredSize(botonesFlechasDimension);
+    der.setContentAreaFilled(false);
     der.addActionListener((e) -> { 
       if(cambiarFx != null)
         cambiarFx.stop();
       cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
       cambiarFx.play();
-      displayNext5(); 
+      displayNext5();
+      getParent().repaint(); 
     });
+    // Se tiene que hacer esto para repintar el fondo y que se siga viendo transparente (Cosas de Swing xd)
+    der.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        getParent().repaint();
+      }
+
+      @Override
+      public void mouseEntered(MouseEvent e) {
+        der.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        der.setIcon(botonDerIconSelected);
+      }
+
+      @Override
+      public void mouseExited(MouseEvent e) {
+        der.setIcon(botonDerIcon);
+      }
+    });
+
 
     ordenarColor = new JButton("C");
     ordenarColor.setFont(miniFont);
+    ordenarColor.setBorder(botonesBorder);
+    ordenarColor.setBackground(botonesColor);
+    ordenarColor.setPreferredSize(botonesOrdenarDimension);
     ordenarColor.addActionListener((e) -> { 
       if(ordenarFx != null)
         ordenarFx.stop();
       ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
       ordenarFx.play();
       ordenarColor(); 
+      getParent().repaint(); 
     });
 
-    ordernarTipo = new JButton("T");
-    ordernarTipo.setFont(miniFont);
-    ordernarTipo.addActionListener((e) -> { 
+    // Se tiene que hacer esto para repintar el fondo y que se siga viendo transparente (Cosas de Swing xd)
+    ordenarColor.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        getParent().repaint();
+      }
+    });
+
+    ordenarTipo = new JButton("T");
+    ordenarTipo.setFont(miniFont);
+    ordenarTipo.setBorder(botonesBorder);
+    ordenarTipo.setBackground(botonesColor);
+    ordenarTipo.setPreferredSize(botonesOrdenarDimension);
+    ordenarTipo.addActionListener((e) -> { 
       if(ordenarFx != null)
         ordenarFx.stop();
       ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
       ordenarFx.play();
       ordenarTipo();
+      getParent().repaint(); 
+    });
+    // Se tiene que hacer esto para repintar el fondo y que se siga viendo transparente (Cosas de Swing xd)
+    ordenarTipo.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseMoved(MouseEvent e) {
+        getParent().repaint();
+      }
     });
 
+
     botonesPanel.add(ordenarColor);
-    botonesPanel.add(ordernarTipo);
+    botonesPanel.add(ordenarTipo);
 
     cartasLista = cartasIniciales;
     cartasDistribuidas = new LinkedList<>();
     mouseListeners = new ArrayList<>();
+    componentListeners = new ArrayList<>();
 
-    add(deckPanel, BorderLayout.CENTER);
+    support.add(deckPanel, BorderLayout.CENTER);
+    support.add(botonesPanel, BorderLayout.SOUTH);
+    add(support, BorderLayout.CENTER);
     add(izq, BorderLayout.WEST);
     add(der, BorderLayout.EAST);
-    add(botonesPanel, BorderLayout.NORTH);
     distribuir();
     displayNext5();
   }
@@ -91,7 +191,7 @@ public class PlayerDeck extends JPanel {
     cartasDistribuidas.clear();
     //cartasLista.clear();
     cartasLista = (LinkedList<Card>) nuevasCartas.clone();
-    updateMouseListeners();
+    updateListeners();
     distribuir();
     index = -1;
     displayNext5();
@@ -119,20 +219,30 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
-  private void updateMouseListeners() {
-    for(Card c : cartasLista)
+  public void addCardComponentListener(ComponentListener componentListener) {
+    componentListeners.add(componentListener);
+    update();
+  }
+
+  private void updateListeners() {
+    for(Card c : cartasLista) {
       for(MouseListener ml : mouseListeners) {
         c.removeMouseListener(ml);
         c.addMouseListener(ml);
       }
+      for(ComponentListener cl : componentListeners) {
+        c.removeComponentListener(cl);
+        c.addComponentListener(cl);
+      }
+    }
   }
 
   private void update() {
     deckPanel.removeAll();
     if(cartasLista.size() >= 1) {
-      updateMouseListeners();
+      updateListeners();
       distribuir();
-      int x = 30;
+      int x = 18;
       for(Card card : cartasDistribuidas.get(index)) {
         card.setBounds(x, 50, card.getWidth(), card.getHeight());
         card.updateOriginalPos();
@@ -183,6 +293,12 @@ public class PlayerDeck extends JPanel {
   private void ordenarTipo() {
     Collections.sort(cartasLista, Card.getTypeComparator());
     update();
+  }
+
+  public ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
+    Image originalImg = originalIcon.getImage();
+    Image escaladaImg = originalImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+    return new ImageIcon(escaladaImg);
   }
 
 }
