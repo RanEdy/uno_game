@@ -104,7 +104,6 @@ public class ManejadorMesa extends JFrame {
   public synchronized void toPilaAnimation(Card card, Point inicio, Point fin) {
     int animDuration = 20;
     if(animTimer != null) {
-      animTimer.stop();
       animTimer = new Timer(1, (e) -> {
           if(time >= animDuration) {
             ((Timer) e.getSource()).stop();
