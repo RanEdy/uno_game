@@ -104,7 +104,7 @@ public class Mesa extends JPanel {
   }
 
   public synchronized void toPilaAnimation(Card card, Point inicio, Point fin) {
-    int animDuration = 20;
+    int animDuration = 30;
     if(animTimer != null) {
       animTimer = new Timer(1, (e) -> {
           if(time >= animDuration) {
