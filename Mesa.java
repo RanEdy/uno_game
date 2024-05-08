@@ -1,8 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.MultipleGradientPaint.CycleMethod;
 import java.awt.event.*;
-import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -15,6 +13,9 @@ public class Mesa extends JPanel {
 
   Timer animTimer = new Timer(1, null);
   int time = 0;
+
+  ImageIcon fondo = new ImageIcon("iconos/bg1.png");
+  ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
 
   public Mesa() {
     super();
@@ -32,7 +33,7 @@ public class Mesa extends JPanel {
     pilaTiradasPanel.setBackground(new Color(255,255,255,30));
     pilaTiradasPanel.setBounds(
       getWidth()/2 -referencia.getWidth()/2,
-      getHeight()/2 -referencia.getHeight()/2 -100,
+      getHeight()/2 -referencia.getHeight()/2,
       referencia.getWidth(), 
       referencia.getHeight()
     );
@@ -126,95 +127,9 @@ public class Mesa extends JPanel {
   }
 
   @Override
-  protected void paintComponent(Graphics g) {
+  public void paintComponent(Graphics g) {
     super.paintComponent(g);
-    Graphics2D g2d = (Graphics2D) g;
-    // Prueba
-
-    int width = getWidth();
-    int height = getHeight();
-    Point2D center = new Point2D.Double(width/2, height/2);
-
-    // Gradiente de esquina a esquina
-    Color[] colors = { new Color(220, 0, 0, 255), new Color(240, 120, 30, 255)};
-    float[] fracs = { 0.3f, 1.0f};
-    Point2D esquinaInferiorIzq = new Point2D.Double(0, height);
-    Point2D esquinaSuperiorDer = new Point2D.Double(width, 0);
-    Point2D esquinaSuperiorIzq = new Point2D.Double(0, 0);
-    Point2D esquinaInferiorDer = new Point2D.Double(width, height);
-
-    Point2D esquinaSuperiorDerAumentada = new Point2D.Double(width-center.getX(), -center.getY());
-
-    LinearGradientPaint p = new LinearGradientPaint(esquinaSuperiorDerAumentada, esquinaInferiorIzq, fracs, colors);
-    g2d.setPaint(p);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-    // Detalles de lineas en el centro
-    Color[] colors2 = { new Color(200, 0, 0, 0), new Color(100, 0, 0, 150), new Color(255, 0, 0, 0)};
-    float[] fracs2 = { 0.1f, 0.5f, 1.0f};
-    LinearGradientPaint p2 = new LinearGradientPaint(esquinaSuperiorIzq, esquinaInferiorDer, fracs2, colors2, CycleMethod.REPEAT);
-    LinearGradientPaint p3 = new LinearGradientPaint(esquinaSuperiorDer, esquinaInferiorIzq, fracs2, colors2, CycleMethod.REPEAT);
-    g2d.setPaint(p2);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-    g2d.setPaint(p3);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-    // Detalles de Circulos
-    float radius = 150;
-    int alpha = 20;
-    Point2D circ_centro = new Point2D.Double(center.getX(), center.getY()-80);
-    Point2D focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY()+30);
-    float[] dist = {0.3f, 0.5f, 1.0f};
-    float[] dist2 = {0.5f, 1.0f};
-    Color[] colors3 = {new Color(200, 0, 0, alpha), new Color(200, 100, 30, alpha), new Color(250, 0, 0, 0)};
-    Color[] centroColors = { new Color(255, 120, 30, 200), new Color(255, 255, 255, 0)};
-
-
-    RadialGradientPaint p4 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);
-    g2d.setPaint(p4);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-    //radius = 100;
-    circ_centro = new Point2D.Double(center.getX(), center.getY()-80);
-    focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
-    RadialGradientPaint centroGradiente = new RadialGradientPaint(circ_centro, radius, focus, dist2, centroColors, CycleMethod.NO_CYCLE);
-    g2d.setPaint(centroGradiente);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-
-    // Circulos intersectando
-    /* 
-    circ_centro = new Point2D.Double(0, center.getY());
-    focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
-    radius = 100;
-    alpha = 1;
-
-    RadialGradientPaint p5 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);
-    g2d.setPaint(p5);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-    circ_centro = new Point2D.Double(center.getX(), height);
-    focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
-
-    RadialGradientPaint p6 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);
-    g2d.setPaint(p6);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-    circ_centro = new Point2D.Double(width, center.getY());
-    focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
-
-    RadialGradientPaint p7 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);
-    g2d.setPaint(p7);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-
-    circ_centro = new Point2D.Double(center.getX(), 0);
-    focus = new Point2D.Double(circ_centro.getX(), circ_centro.getY());
-
-    RadialGradientPaint p8 = new RadialGradientPaint(circ_centro, radius, focus, dist, colors3, CycleMethod.REPEAT);
-    g2d.setPaint(p8);
-    g2d.fillRect(0, 0, getWidth(), getHeight());
-    */
-
+    g.drawImage(fondoEscalado.getImage(), 0, 0, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height, null);
   }
-  
+
 }

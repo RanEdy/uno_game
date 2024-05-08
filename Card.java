@@ -137,7 +137,7 @@ public class Card extends JPanel implements MouseListener {
     g2d.setTransform(originTransform);
   }
 
-  public ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
+  public static ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
     Image originalImg = originalIcon.getImage();
     Image escaladaImg = originalImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
     return new ImageIcon(escaladaImg);
