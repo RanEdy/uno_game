@@ -1,12 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.LinkedList;
-import java.util.Stack;
+
 
 import javax.swing.*;
 
@@ -23,7 +18,7 @@ public class ManejadorMesa extends JFrame {
     setSize(screenDim);
     setLayout(new BorderLayout(0,0));
 
-    add(new Mesa(), BorderLayout.CENTER);
+    add(new PlayerView(), BorderLayout.CENTER);
     setVisible(true);
   }
 

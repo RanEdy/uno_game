@@ -2,9 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.Stack;
 
-public class Mesa extends JPanel {
+public class PlayerView extends JPanel {
 
   int CARTAS_INICIALES = 7;
 
@@ -17,14 +18,14 @@ public class Mesa extends JPanel {
   ImageIcon fondo = new ImageIcon("iconos/bg1.png");
   ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
 
-  public Mesa() {
+  public PlayerView() {
     super();
     setLayout(null);
     setSize(ManejadorMesa.screenDim);
 
     LinkedList<Card> baraja = Card.generarBaraja();
     pilaTiradas = new Stack<>();
-    LinkedList<Card> cartas = Card.randomCartas(baraja, CARTAS_INICIALES);
+    LinkedList<Card> cartas = Card.randomCartas(baraja, CARTAS_INICIALES, true);
 
     Card referencia = baraja.getLast();
     pilaTiradasPanel = new JPanel(new BorderLayout(0,0));
@@ -44,6 +45,7 @@ public class Mesa extends JPanel {
     playerDeck.addCardMouseListener(new MouseAdapter() {
       @Override
       public void mouseClicked(MouseEvent e) {
+        Random random = new Random();
         Card carta = (Card) e.getSource();
         Point cartaPos = carta.getLocationOnScreen();
 
@@ -57,6 +59,9 @@ public class Mesa extends JPanel {
           Card copia = carta.copy();
           copia.escalar(0.5);
           copia.setJugable(false);
+          if (carta.getColorInt() == CardColor.BLACK) {
+            copia.setColor(new CardColor(random.nextInt(4)));
+          }
 
           Point pilaPos = pilaTiradasPanel.getLocation();
           copia.setLocation(cartaPos);
@@ -81,7 +86,7 @@ public class Mesa extends JPanel {
     JButton resetB = new JButton("Reset");
     resetB.setBounds(100, 400, 100, 20);
     resetB.addActionListener((e) -> { 
-      playerDeck.reset(Card.randomCartas(baraja, CARTAS_INICIALES));
+      playerDeck.reset(Card.randomCartas(baraja, CARTAS_INICIALES, true));
       repaint();
       pilaTiradasPanel.repaint();
       playerDeck.repaint();
@@ -106,7 +111,6 @@ public class Mesa extends JPanel {
 
   public synchronized void toPilaAnimation(Card card, Point inicio, Point fin) {
     int animDuration = 30;
-    int cardZ = getComponentZOrder(card);
     setComponentZOrder(card, 0);
     if(animTimer != null) {
       animTimer = new Timer(1, (e) -> {

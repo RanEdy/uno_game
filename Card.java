@@ -186,8 +186,9 @@ public class Card extends JPanel implements MouseListener {
     return cartas;
   }
   
-  public static LinkedList<Card> randomCartas(LinkedList<Card> baraja, int max) {
-    LinkedList<Card> barajaClone = (LinkedList<Card>) baraja.clone();
+  public static LinkedList<Card> randomCartas(LinkedList<Card> baraja, int max, boolean clonar) {
+
+    LinkedList<Card> barajaClone = clonar ? (LinkedList<Card>) baraja.clone() : baraja;
     LinkedList<Card> cartas = new LinkedList<>();
     Random random = new Random();
     ArrayList<Integer> nums = new ArrayList<>();
@@ -225,6 +226,8 @@ public class Card extends JPanel implements MouseListener {
   }
 
   public int getColorInt() { return color.getColorInt(); }
+
+  public void setColor(CardColor color) { this.color = color; }
 
   public CardType getCardType() { return type; }
 
