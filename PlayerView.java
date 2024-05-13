@@ -23,9 +23,9 @@ public class PlayerView extends JPanel {
     setLayout(null);
     setSize(ManejadorMesa.screenDim);
 
-    LinkedList<Card> baraja = Card.generarBaraja();
+    Stack<Card> baraja = Card.generarBaraja();
     pilaTiradas = new Stack<>();
-    LinkedList<Card> cartas = Card.randomCartas(baraja, CARTAS_INICIALES, true);
+    LinkedList<Card> cartas = Card.comerCartas(baraja, CARTAS_INICIALES);
 
     Card referencia = baraja.getLast();
     pilaTiradasPanel = new JPanel(new BorderLayout(0,0));
@@ -86,7 +86,7 @@ public class PlayerView extends JPanel {
     JButton resetB = new JButton("Reset");
     resetB.setBounds(100, 400, 100, 20);
     resetB.addActionListener((e) -> { 
-      playerDeck.reset(Card.randomCartas(baraja, CARTAS_INICIALES, true));
+      playerDeck.reset(Card.comerCartas(baraja, CARTAS_INICIALES));
       repaint();
       pilaTiradasPanel.repaint();
       playerDeck.repaint();

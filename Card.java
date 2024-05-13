@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.Stack;
 
 public class Card extends JPanel implements MouseListener {
 
@@ -41,7 +42,7 @@ public class Card extends JPanel implements MouseListener {
   private Timer animTimer;
   private int hover_Y = 50, hoverDuration = 15;
   private Point hoverTargetPos;
-  private Point originalPos, pos;
+  private Point originalPos;
 
   // Variables de audio para efectos de sonido
   private Audio hoverFx;
@@ -137,11 +138,7 @@ public class Card extends JPanel implements MouseListener {
     g2d.setTransform(originTransform);
   }
 
-  public static ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
-    Image originalImg = originalIcon.getImage();
-    Image escaladaImg = originalImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-    return new ImageIcon(escaladaImg);
-  }
+//----------------------------------------------- Metodos publicos del objeto ----------------------------------------------------------
 
   public void escalar(double factor) {
     int newWidth = (int) (getWidth() * factor);
@@ -162,7 +159,34 @@ public class Card extends JPanel implements MouseListener {
 
   public Card copy() { return new Card(color, type); }
 
-  public static LinkedList<Card> generarBaraja() {
+  public void updateOriginalPos() { originalPos = getLocation(); }
+
+  public int getColorInt() { return color.getColorInt(); }
+
+  public void setColor(CardColor color) { this.color = color; }
+
+  public CardType getCardType() { return type; }
+
+  public void setJugable(boolean isJugable) { this.isJugable = isJugable; }
+
+  public boolean isValid(Card card) {
+    if(card == null)
+      return false;
+    if(this.getColorInt() == CardColor.BLACK)
+      return true;
+    return card.getCardType().equals(this.getCardType()) || card.getColorInt() == this.getColorInt();
+  }
+//---------------------------------------------------------------------------------------------------------------------------------------
+
+
+//----------------------------------------------- Metodos publicos estaticos de la clase ----------------------------------------------------------
+  public static ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
+    Image originalImg = originalIcon.getImage();
+    Image escaladaImg = originalImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+    return new ImageIcon(escaladaImg);
+  }
+
+  public static Stack<Card> generarBaraja() {
     LinkedList<Card> cartas = new LinkedList<>();
     //Cartas comunes hasta el de Comer
     for(int i = 0; i < CardColor.MAX_COLORS-1; i++) {
@@ -182,7 +206,19 @@ public class Card extends JPanel implements MouseListener {
       cartas.add(wild_eat);
       cartas.add(wild);
     }
+
     Collections.shuffle(cartas);
+
+    Stack<Card> pilaCartas = new Stack<>();
+    for(Card carta : cartas)
+      pilaCartas.push(carta);
+    return pilaCartas;
+  }
+
+  public static LinkedList<Card> comerCartas(Stack<Card> pila, int numCartas) {
+    LinkedList<Card> cartas = new LinkedList<>();
+    for(int i = 0; i < numCartas; i++)
+      cartas.add(pila.pop());
     return cartas;
   }
   
@@ -204,8 +240,26 @@ public class Card extends JPanel implements MouseListener {
     return cartas;
   }
 
+  public static Comparator<Card> getColorComparator() {
+    return new Comparator<Card>() {
+      @Override
+      public int compare(Card o1, Card o2) {
+        return o1.getColorInt() - o2.getColorInt();
+      }
+    };
+  }
 
-  public void updateOriginalPos() { originalPos = getLocation(); }
+  public static Comparator<Card> getTypeComparator() {
+    return new Comparator<Card>() {
+      @Override
+      public int compare(Card o1, Card o2) {
+        return o1.getCardType().compareTo(o2.getCardType());
+      }
+    };
+  }
+//---------------------------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------- Metodos privados del objeto  ----------------------------------------------------------
 
   synchronized private void hoverAnimacion(Point inicio, Point fin) {
     if(animTimer != null)
@@ -224,43 +278,10 @@ public class Card extends JPanel implements MouseListener {
       }});
       animTimer.start();
   }
-
-  public int getColorInt() { return color.getColorInt(); }
-
-  public void setColor(CardColor color) { this.color = color; }
-
-  public CardType getCardType() { return type; }
-
-  public void setJugable(boolean isJugable) { this.isJugable = isJugable; }
-
-  public boolean isValid(Card card) {
-    if(card == null)
-      return false;
-    if(this.getColorInt() == CardColor.BLACK)
-      return true;
-    return card.getCardType().equals(this.getCardType()) || card.getColorInt() == this.getColorInt();
-  }
-
-
-  public static Comparator<Card> getColorComparator() {
-    return new Comparator<Card>() {
-      @Override
-      public int compare(Card o1, Card o2) {
-        return o1.getColorInt() - o2.getColorInt();
-      }
-    };
-  }
-
-  public static Comparator<Card> getTypeComparator() {
-    return new Comparator<Card>() {
-      @Override
-      public int compare(Card o1, Card o2) {
-        return o1.getCardType().compareTo(o2.getCardType());
-      }
-    };
-  }
+//---------------------------------------------------------------------------------------------------------------------------------------
 
   
+//----------------------------------------------- Metodos publicos sobreescritos ----------------------------------------------------------
   @Override public void mouseClicked(MouseEvent e) {
     if(isJugable) {
       time = 0;
@@ -303,4 +324,6 @@ public class Card extends JPanel implements MouseListener {
 
   @Override
   public String toString() { return type.toString() + " | " + color.getColorName(); }
+
+//---------------------------------------------------------------------------------------------------------------------------------------
 }

@@ -33,7 +33,4 @@ public class Animacion {
   private static double flip(double x) {
     return 1 - x;
   }
-
-
-
 }
