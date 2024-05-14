@@ -37,7 +37,6 @@ public class PlayerDeck extends JPanel {
 
   private Audio ordenarFx, cambiarFx;
 
-
   public PlayerDeck(LinkedList<Card> cartasIniciales) {
     super();
     setLayout(new BorderLayout(20,0));
@@ -202,6 +201,12 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
+  public void addCard(LinkedList<Card> cards) {
+    for(Card card : cards)
+      cartasLista.add(card);
+    update();
+  }
+
   public Card removeCard(int i) {
     index = 0;
     Card c = cartasLista.remove(i);
@@ -297,7 +302,7 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
-  public ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
+  private ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
     Image originalImg = originalIcon.getImage();
     Image escaladaImg = originalImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
     return new ImageIcon(escaladaImg);
