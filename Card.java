@@ -43,6 +43,7 @@ public class Card extends JPanel implements MouseListener {
   private int hover_Y = 50, hoverDuration = 15;
   private Point hoverTargetPos;
   private Point originalPos;
+  private boolean isCursorOverCard = false;
 
   // Variables de audio para efectos de sonido
   private Audio hoverFx;
@@ -261,14 +262,14 @@ public class Card extends JPanel implements MouseListener {
 
 //----------------------------------------------- Metodos privados del objeto  ----------------------------------------------------------
 
-  synchronized private void hoverAnimacion(Point inicio, Point fin) {
+  synchronized private void hoverAnimacion(Point inicio, Point fin, boolean isCursorValido) {
     if(animTimer != null)
       animTimer.stop();
     animTimer = new Timer(1, new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent e) {
         // Validar el cursor dentro de aqui
-        if(time >= hoverDuration) {
+        if(time >= hoverDuration || isCursorValido) {
           ((Timer) e.getSource()).stop();
           time = 0;
           return;
@@ -299,6 +300,7 @@ public class Card extends JPanel implements MouseListener {
 
   @Override
   public void mouseEntered(MouseEvent e) {
+    isCursorOverCard = true;
     if(isJugable) {
       setCursor(new Cursor(Cursor.HAND_CURSOR));
       selectBorder = BorderFactory.createLineBorder(Color.YELLOW, 2, true);
@@ -309,17 +311,18 @@ public class Card extends JPanel implements MouseListener {
         hoverFx = new Audio("sfx/hover2.wav", 0.8f);
         hoverFx.play();
         hoverTargetPos = new Point(originalPos.x, originalPos.y - hover_Y);
-        hoverAnimacion(originalPos, hoverTargetPos);
+        hoverAnimacion(originalPos, hoverTargetPos, !isCursorOverCard);
       }
     }
   }
 
   @Override
   public void mouseExited(MouseEvent e) {
+    isCursorOverCard = false;
     selectBorder = BorderFactory.createLineBorder(Color.WHITE, 1, true);
     setBorder(selectBorder);
     if(!animTimer.isRunning() && isJugable)
-      hoverAnimacion(hoverTargetPos, originalPos);
+      hoverAnimacion(hoverTargetPos, originalPos, isCursorOverCard);
   }
 
   @Override
