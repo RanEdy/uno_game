@@ -7,16 +7,22 @@ import java.util.Stack;
 
 public class PlayerView extends JPanel {
 
-  int CARTAS_INICIALES = 7;
+  private int CARTAS_INICIALES = 7;
 
-  Stack<Card> pilaTiradas;
-  JPanel pilaTiradasPanel;
+  private Stack<Card> pilaTiradas; // la pila de tiradas NO deberia estar del lado del jugador, deberia estar del lado del servidor, el jugador solo tiene que ver la carta del tope
 
-  Timer animTimer = new Timer(1, null);
-  int time = 0;
+  // Componentes visuales importantes
+  private JPanel pilaTiradasPanel;
+  private JPanel infoPanel;
+  private JLabel nombresJugadores;
 
-  ImageIcon fondo = new ImageIcon("iconos/bg1.png");
-  ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
+  // Variables para las animaciones
+  private Timer animTimer = new Timer(1, null);
+  private int time = 0;
+
+  // Variables para pintar el fondo
+  private ImageIcon fondo = new ImageIcon("iconos/bg1.png");
+  private ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
 
   public PlayerView() {
     super();
