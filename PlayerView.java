@@ -11,6 +11,8 @@ public class PlayerView extends JPanel {
 
   private Stack<Card> pilaTiradas; // la pila de tiradas NO deberia estar del lado del jugador, deberia estar del lado del servidor, el jugador solo tiene que ver la carta del tope
 
+  private int[] numCartasJugadores = { 2, 5, 4};
+  
   // Componentes visuales importantes
   private JPanel pilaTiradasPanel;
   private JPanel infoPanel;
