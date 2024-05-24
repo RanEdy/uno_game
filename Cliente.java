@@ -243,7 +243,7 @@ public class Cliente extends JFrame{
   public static void main(String[] args){
     String nickname = Nombre();
     try {
-        Socket socket = new Socket("192.168.100.69", 9520);
+        Socket socket = new Socket("192.168.1.168", 9520);
         Cliente cliente = new Cliente(socket, nickname);
         cliente.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         cliente.lobby();
