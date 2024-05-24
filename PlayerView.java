@@ -13,7 +13,8 @@ public class PlayerView extends JPanel {
   private Card topeDePilaDeTiradas;
 
   private ArrayList<Integer> numCartasJugadores = new ArrayList<>();
-  private ArrayList<String> nombresJugadores = new ArrayList<>();
+  private ArrayList<String> nombresJugadoresGlobal = new ArrayList<>();
+  private ArrayList<String> nombresJugadoresLocal = new ArrayList<>();
   
   // Componentes visuales importantes
   private JPanel pilaTiradasPanel;
@@ -43,7 +44,7 @@ public class PlayerView extends JPanel {
     cargarImagenes();
 
     // Asignar la informacion del paquete
-    
+    nombresJugadoresGlobal = datosIniciales.apodosJugadores;
     for(int i = 0; i < datosIniciales.apodosJugadores.size(); i++) {
       // Encuentra el indice de tu nombre y te lo coloca como tu turno
       if(datosIniciales.nombre.equals(datosIniciales.apodosJugadores.get(i)))
@@ -51,14 +52,14 @@ public class PlayerView extends JPanel {
       // Si no es tu nombre se agregan la informacion de los otros
       else {
         numCartasJugadores.add(datosIniciales.globalNumCartas.get(i));
-        nombresJugadores.add(datosIniciales.apodosJugadores.get(i));
+        nombresJugadoresLocal.add(datosIniciales.apodosJugadores.get(i));
       }
     }
 
     turnoGlobal = datosIniciales.turno;
 
     System.out.println(" ------------------- Info ----------------");
-    System.out.println("Jugadores: " + nombresJugadores.size());
+    System.out.println("Jugadores: " + nombresJugadoresGlobal.size());
     System.out.println("Cartas Jugadores: " + numCartasJugadores);
     System.out.println("Numero de tu turno: " + turno);
     System.out.println(" --------------------------------------------");
@@ -125,7 +126,7 @@ public class PlayerView extends JPanel {
   }
 
   private void actualizarNombreTurnoActual() {
-    nombreTurnoActual.setText("TURNO: " + nombresJugadores.get(turnoGlobal));
+    nombreTurnoActual.setText("TURNO: " + nombresJugadoresGlobal.get(turnoGlobal));
   }
 
   public void setTope(Card tope) {
@@ -267,9 +268,9 @@ public class PlayerView extends JPanel {
           g2d.setColor(Color.WHITE);
           g2d.setFont(new Font("SansSerif", Font.BOLD, fontSize));
           g2d.drawString(
-            nombresJugadores.get(i),
+            nombresJugadoresLocal.get(i),
             posicionesNombres[i].x + 5,
-            posicionesNombres[i].y + fontSize
+            posicionesNombres[i].y + fontSize + 5
           );
         }
   }
