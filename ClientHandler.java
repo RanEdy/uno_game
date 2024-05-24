@@ -11,7 +11,6 @@ public class ClientHandler implements Runnable {
   private ObjectInputStream entrada;
   private ObjectOutputStream salida;
 
-  // En lugar de esta variable -> colocar objeto de PacketData para toda la info necesaria
   private int clientNumber;
 
   public ClientHandler(Socket socket, int clientNumber) {
@@ -31,11 +30,11 @@ public class ClientHandler implements Runnable {
     }
   }
 
+  // Reenviar el paquete a todos los clientes desde el servidor (servidor -> clientes)
   public static void broadcastPacketFromServer(PacketData packetDataToSend) {
       for(ClientHandler clientHandler : clientHandlers) {
         try {
             if(packetDataToSend.accion.equals(ServerAction.NEW_ELEMENTS)){
-              System.out.println("\nverificacion: " + packetDataToSend.apodosJugadores.size());
                 clientHandler.salida.writeObject(packetDataToSend);
                 clientHandler.salida.flush();
             } else if(packetDataToSend.accion.equals(ServerAction.ERROR)){
@@ -43,12 +42,11 @@ public class ClientHandler implements Runnable {
                     clientHandler.salida.writeObject(packetDataToSend);
                     clientHandler.salida.flush();
                 }
-            } else {
-              if(clientHandler.clientNumber != packetDataToSend.turno) {
-                  clientHandler.salida.writeObject(packetDataToSend);
-                  clientHandler.salida.flush();
-              }
+            } else if(clientHandler.clientNumber != packetDataToSend.turno) {
+                clientHandler.salida.writeObject(packetDataToSend);
+                clientHandler.salida.flush();
             }
+            
         } catch(Exception e) {
           System.out.println("problema aqui - 2");
           e.printStackTrace();
@@ -56,13 +54,27 @@ public class ClientHandler implements Runnable {
       }
   }
 
-  // Reenviar el mensaje a todos los clientes
+  // Metodo para enviar un paquete a un cliente especifico desde el servidor
+  public static void sendPacketToClientFromServer(PacketData packetDataToSend, int clientNum) {
+    try {
+      ClientHandler cliente = clientHandlers.get(clientNum);
+      cliente.salida.writeObject(packetDataToSend);
+      cliente.salida.flush();
+    }
+    catch(IndexOutOfBoundsException e) {
+      System.out.println("Error al enviar paquete al cliente " + clientNum + " | cliente no valido");
+    }
+    catch(Exception e) {
+      System.out.println("Error al enviar paquete al cliente " + clientNum);
+      e.printStackTrace();
+    }
+  }
+
+  // Reenviar el paquete a todos los clientes desde el cliente (cliente -> clientes)
   public void broadcastPacket(PacketData packetDataToSend) {
-    System.out.println("\nverificacion: " + packetDataToSend.apodosJugadores.size());
       for(ClientHandler clientHandler : clientHandlers) {
         try {
             if(packetDataToSend.accion.equals(ServerAction.NEW_ELEMENTS)){
-              System.out.println("\nverificacion: " + packetDataToSend.apodosJugadores.size());
                 clientHandler.salida.writeObject(packetDataToSend);
                 clientHandler.salida.flush();
             } else if(packetDataToSend.accion.equals(ServerAction.ERROR)){
@@ -106,20 +118,22 @@ public class ClientHandler implements Runnable {
     }
   }
 
+  // Metodo esta leyendo del cliente
   @Override
   public void run() {
     PacketData packetFromClient, packetFromServer;
     while (socket.isConnected()) {
       try {
+        //Lee el paquete del Cliente
         packetFromClient = (PacketData) entrada.readObject();
+        // Se lo envia al servidor
         packetFromServer = Server.receiveClientMovement(packetFromClient);
-        System.out.println("Paquete enviado: ");
+        System.out.println("Paquete devuelto por el servidor: ");
         System.out.println(packetFromServer);
-        broadcastPacket(packetFromServer);
+        // Retransmite a todos los clientes
+        //broadcastPacket(packetFromServer);
       }
       catch(Exception e) {
-        System.out.println("problema aqui - 3");
-        e.printStackTrace();
         closeEverything();
         break;
       }

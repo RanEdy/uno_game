@@ -65,10 +65,7 @@ public class PlayerDeck extends JPanel {
     izq.setContentAreaFilled(false);
     izq.setPreferredSize(botonesFlechasDimension);
     izq.addActionListener((e) -> { 
-      if(cambiarFx != null)
-        cambiarFx.stop();
       cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
-      cambiarFx.play();
       displayPrev5();
       getParent().repaint();
     });
@@ -98,10 +95,7 @@ public class PlayerDeck extends JPanel {
     der.setPreferredSize(botonesFlechasDimension);
     der.setContentAreaFilled(false);
     der.addActionListener((e) -> { 
-      if(cambiarFx != null)
-        cambiarFx.stop();
       cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
-      cambiarFx.play();
       displayNext5();
       getParent().repaint(); 
     });
@@ -131,10 +125,7 @@ public class PlayerDeck extends JPanel {
     ordenarColor.setBackground(botonesColor);
     ordenarColor.setPreferredSize(botonesOrdenarDimension);
     ordenarColor.addActionListener((e) -> { 
-      if(ordenarFx != null)
-        ordenarFx.stop();
       ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
-      ordenarFx.play();
       ordenarColor(); 
       getParent().repaint(); 
     });
@@ -153,10 +144,7 @@ public class PlayerDeck extends JPanel {
     ordenarTipo.setBackground(botonesColor);
     ordenarTipo.setPreferredSize(botonesOrdenarDimension);
     ordenarTipo.addActionListener((e) -> { 
-      if(ordenarFx != null)
-        ordenarFx.stop();
       ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
-      ordenarFx.play();
       ordenarTipo();
       getParent().repaint(); 
     });

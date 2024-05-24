@@ -1,8 +1,9 @@
 import javax.swing.*;
 import java.util.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
-import java.net.InetAddress;
 import java.net.Socket;
 
 public class Cliente extends JFrame{
@@ -14,8 +15,7 @@ public class Cliente extends JFrame{
     private ObjectInputStream entrada;
     private ObjectOutputStream salida;
     private boolean connected = true;
-
-    private LinkedList <Card> baraja = new LinkedList<>();
+    private ManejadorMesa mesa;
     
     public Cliente(Socket socket, String username){
         super("[ Jugador ]");
@@ -95,127 +95,162 @@ public class Cliente extends JFrame{
         nomJugador[0].setText(username);
 
     }
-
+// -------------------------------------------------- Metodos de envio de informacion a el servidor ----------------------------------------------------------
+    // Metodo para enviar un paquete al servidor
     public void sendMove(PacketData enviar) {
         try {
-          while(socket.isConnected()) {
-            //Aqui es donde se va a mandar la carta
-            salida.writeObject(enviar);
-            salida.flush();
-          }
+
+          salida.writeObject(enviar);
+          System.out.println("\nPaquete enviado:\n");
+          System.out.println(enviar);
+          salida.flush();
         } catch(Exception e) {
           e.printStackTrace();
         }
     }
 
-    public void closeEverything() {
-        try {
-            connected = false;
-
-          if(entrada != null)
-            entrada.close();
-    
-          if(salida != null)
-            salida.close();
-    
-          if(socket != null) 
-            socket.close();
-        } catch(Exception e) {
-          e.printStackTrace();
-        }
-    }
-
-    public void listenForMessage() {
-        new Thread(() -> {
-          while(connected && !socket.isClosed()) {
-            try {
-              PacketData packetDataFromServer = (PacketData) entrada.readObject();
-              System.out.println(packetDataFromServer);
-              //System.out.println("jugador [" +  packetDataFromServer.turno + "] lanzo una carta");
-
-              switch(packetDataFromServer.accion){
-                case START:
-                  System.out.println("Juego Iniciado");
-                  SwingUtilities.invokeLater(() -> { new ManejadorMesa(); });
-                  setVisible(false);
-                break;
-
-                case THROW_CARD:
-                    System.out.println("1");
-                break;
-    
-                case EAT:
-                System.out.println("2");
-                break;
-    
-                case EAT_2:
-                System.out.println("3");
-                break;
-    
-                case EAT_4:
-                System.out.println("4");
-                break;
-    
-                case CHANGE_DIRECTION:
-                System.out.println("5");
-                break;
-    
-                case CHANGE_COLOR:
-                System.out.println("6");
-                break;
-    
-                case BLOCK:
-                System.out.println("7");
-                break;
-    
-                case UNO:
-                System.out.println("8");                    
-                break;
-    
-                case NEW_ELEMENTS:
-                    System.out.println("SERVER> Un nuevo jugador se ha conectado");
-                    baraja = packetDataFromServer.barajaCartas;          
-                    ArrayList <String> nicknames = packetDataFromServer.apodosJugadores;  
-                    for(int x = 0; x < nicknames.size();  x++) {
-                        nomJugador[x].setText(nicknames.get(x));
-                        panelJugador[x].setVisible(true);
-                        //System.out.println("hola: " + nicknames.get(x));
-                    }     
-                    //System.out.println("total de jugadores: " + nicknames.size());
-                break;
-    
-                default:
-                    System.out.println("9");
-                break;
-            }
-
-            } catch (ClassNotFoundException | IOException  e) {
-              closeEverything();
-              e.printStackTrace();
-            }
-          }
-        }).start();
-      }
-    
-    public static void main(String[] args){
-        String nickname = Nombre();
-        try {
-            Socket socket = new Socket("192.168.58.108", 9520);
-            Cliente cliente = new Cliente(socket, nickname);
-            cliente.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            cliente.lobby();
-            cliente.listenForMessage();
-            cliente.sendNickname();
-           // cliente.sendMove();
-          }catch(Exception e) {
-            e.printStackTrace();
-          }
-    }
-
+    // Metodo que se utiliza para enviar el nombre de usuario al servidor cuando se crea el cliente
     public void sendNickname() throws IOException{
         PacketData enviar = new PacketData();
         enviar.accion = ServerAction.NEW_ELEMENTS;
         enviar.nombre = username;
         salida.writeObject(enviar);
-    }    
+        salida.flush();
+    }
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  public void closeEverything() {
+    try {
+        connected = false;
+
+      if(entrada != null)
+        entrada.close();
+
+      if(salida != null)
+        salida.close();
+
+      if(socket != null) 
+        socket.close();
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  // Hilo que espera una respuesta del servidor
+  public void listenForMessage() {
+      new Thread(() -> {
+        while(connected && !socket.isClosed()) {
+          try {
+            PacketData packetDataFromServer = (PacketData) entrada.readObject();
+            System.out.println("    Paquete Recibido del Servidor   \n");
+            System.out.println(packetDataFromServer + "\n");
+            procesarAccion(packetDataFromServer);
+          } catch (ClassNotFoundException | IOException  e) {
+            closeEverything();
+            e.printStackTrace();
+          }
+        }
+      }).start();
+    }
+
+    // Metodo para ejecutar la accion recibida por el servidor
+    private void procesarAccion(PacketData paquete) {
+      switch(paquete.accion){
+        case START:
+          System.out.println("Juego Iniciado con el paquete anterior ^^^^^^");
+          iniciarJuego(paquete);
+          setVisible(false);
+        break;
+
+        case THROW_CARD:
+          
+            System.out.println("1");
+        break;
+
+        case EAT:
+        System.out.println("2");
+        break;
+
+        case EAT_2:
+        System.out.println("3");
+        break;
+
+        case EAT_4:
+        System.out.println("4");
+        break;
+
+        case CHANGE_DIRECTION:
+        System.out.println("5");
+        break;
+
+        case CHANGE_COLOR:
+        System.out.println("6");
+        break;
+
+        case BLOCK:
+        System.out.println("7");
+        break;
+
+        case UNO:
+        System.out.println("8");                    
+        break;
+
+        case NEW_ELEMENTS:
+            System.out.println("SERVER> Un nuevo jugador se ha conectado");       
+            ArrayList <String> nicknames = paquete.apodosJugadores;
+            for(int x = 0; x < nicknames.size();  x++) {
+                nomJugador[x].setText(nicknames.get(x));
+                panelJugador[x].setVisible(true);
+            }     
+        break;
+
+        default:
+            System.out.println("9");
+        break;
+    }
+
+  }
+
+  private void iniciarJuego(PacketData paquete) {
+    mesa = new ManejadorMesa(paquete);
+    PlayerView playerView = mesa.playerView;
+    // Añadir listener para cuando hagas click en todas las cartas de tu baraja
+    playerView.getPlayerDeck().addCardMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        Card cartaSeleccionada = (Card) e.getSource();
+        if(playerView.getTurno() == playerView.turnoGlobal) {
+          if(cartaSeleccionada.getColorInt() != CardColor.BLACK) {
+            playerView.actionTirarCartaComun(cartaSeleccionada, this);
+          }
+          else {
+            playerView.actionTirarCartaEspecial(cartaSeleccionada, this);
+          }
+          // Se le envia un paquete al Servidor
+          PacketData paqueteEnviar = new PacketData();
+          paqueteEnviar.accion = ServerAction.THROW_CARD;
+          paqueteEnviar.cartaDeCliente = cartaSeleccionada;
+          paqueteEnviar.nombre = username;
+          sendMove(paqueteEnviar);
+        }
+      }
+    });
+
+  }
+    
+    
+  public static void main(String[] args){
+    String nickname = Nombre();
+    try {
+        Socket socket = new Socket("192.168.100.69", 9520);
+        Cliente cliente = new Cliente(socket, nickname);
+        cliente.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        cliente.lobby();
+        cliente.listenForMessage();
+        cliente.sendNickname();
+        // cliente.sendMove();
+      }catch(Exception e) {
+        e.printStackTrace();
+      }
+  }
 }

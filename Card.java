@@ -34,6 +34,7 @@ public class Card extends JPanel implements MouseListener {
 
   // Variables locales del ancho, alto y grosor del borde
   private int width, height, thickness;
+  private double factorDeEscalado = 1.0;
   
   // Variable del tiempo global para las animaciones
   private int time = 0;
@@ -142,6 +143,7 @@ public class Card extends JPanel implements MouseListener {
 //----------------------------------------------- Metodos publicos del objeto ----------------------------------------------------------
 
   public void escalar(double factor) {
+    factorDeEscalado = factor;
     int newWidth = (int) (getWidth() * factor);
     int newHeight = (int) (getHeight() * factor);
     setPreferredSize(new Dimension(newWidth, newHeight));
@@ -158,9 +160,15 @@ public class Card extends JPanel implements MouseListener {
     repaint();
   }
 
-  public Card copy() { return new Card(color, type); }
+  public Card copy() { 
+    Card copia =  new Card(color, type);
+    copia.escalar(factorDeEscalado);
+    return copia;
+  }
 
   public void updateOriginalPos() { originalPos = getLocation(); }
+
+  public double getFactorDeEscalado() { return factorDeEscalado; }
 
   public int getColorInt() { return color.getColorInt(); }
 
@@ -287,10 +295,7 @@ public class Card extends JPanel implements MouseListener {
     if(isJugable) {
       time = 0;
       animTimer.stop();
-      if(selectFx != null)
-        selectFx.stop();
       selectFx = new Audio("sfx/select3.wav", 0.8f);
-      selectFx.play();
     }
   }
 
@@ -306,10 +311,7 @@ public class Card extends JPanel implements MouseListener {
       selectBorder = BorderFactory.createLineBorder(Color.YELLOW, 2, true);
       setBorder(selectBorder);
       if(!animTimer.isRunning()) {
-        if(hoverFx != null)
-          hoverFx.stop();
         hoverFx = new Audio("sfx/hover2.wav", 0.8f);
-        hoverFx.play();
         hoverTargetPos = new Point(originalPos.x, originalPos.y - hover_Y);
         hoverAnimacion(originalPos, hoverTargetPos, !isCursorOverCard);
       }

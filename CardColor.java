@@ -1,11 +1,11 @@
 import java.awt.GradientPaint;
 import java.awt.Point;
+import java.io.Serializable;
 import java.awt.Color;
 
-public class CardColor {
+public class CardColor implements Serializable {
   
   public static final int RED = 0, YELLOW = 1, GREEN = 2, BLUE = 3, BLACK = 4, MAX_COLORS = 5;
-  private GradientPaint gradiente;
   private Color color;
   private String colorName;
   private int colorInt;
@@ -43,8 +43,7 @@ public class CardColor {
   public GradientPaint getGradiente(int width, int height) {
     Point p1 = new Point(0, height);
     Point p2 = new Point(width, height);
-    gradiente = new GradientPaint(p2, color.brighter(), p1, color.darker());
-    return gradiente;
+    return new GradientPaint(p2, color.brighter(), p1, color.darker());
   }
 
   public String getColorName() { return this.colorName; }

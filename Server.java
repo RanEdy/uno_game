@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.*;
 import javax.swing.*;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 
@@ -17,6 +18,8 @@ public class Server extends JFrame {
   private boolean comenzar = false;
   private int jugadorActual = 0;
   private JButton iniciar;
+
+  private Stack<Card> baraja;
 
   public Server(ServerSocket ss) {
     super("Servidor del UNO");
@@ -32,34 +35,55 @@ public class Server extends JFrame {
     System.out.println("[ Servidor Iniciado correctamente ]");
 
     getContentPane().setBackground(Color.red);
-        ImageIcon icono = new ImageIcon ("iconos/logo.png");
-        JLabel icono_UNO = new JLabel(icono);
-        add(icono_UNO, BorderLayout.NORTH);
-        
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        panel.setOpaque(false);
-        add(panel, BorderLayout.CENTER);
-        
-        iniciar = new JButton ("Iniciar");
-        iniciar.setBorder(BorderFactory.createLineBorder(Color.black, 3));
-        iniciar.setFont(new java.awt.Font("Segoe UI", 3, 58));
-        iniciar.setBackground(Color.yellow);
-        iniciar.addActionListener((ActionEvent evento) -> {
-            if(contadorJugadores >= 2){
-                comenzar = true;
-                PacketData paqueteEnviar = new PacketData();
-                paqueteEnviar.accion = ServerAction.START;
-                ClientHandler.broadcastPacketFromServer(paqueteEnviar);
-                setVisible(false);
-            } else {
-                JOptionPane.showMessageDialog(null, "Necesitas al menos dos jugadores + [ " + contadorJugadores + " ]", 
-                "Error de inicio", JOptionPane.ERROR_MESSAGE);
+    ImageIcon icono = new ImageIcon ("iconos/logo.png");
+    JLabel icono_UNO = new JLabel(icono);
+    add(icono_UNO, BorderLayout.NORTH);
+    
+    JPanel panel = new JPanel(new BorderLayout());
+    panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    panel.setOpaque(false);
+    add(panel, BorderLayout.CENTER);
+    
+    iniciar = new JButton ("Iniciar");
+    iniciar.setBorder(BorderFactory.createLineBorder(Color.black, 3));
+    iniciar.setFont(new java.awt.Font("Segoe UI", 3, 58));
+    iniciar.setBackground(Color.yellow);
+    // Boton iniciar
+    iniciar.addActionListener((ActionEvent evento) -> {
+        if(contadorJugadores >= 1){
+            baraja = Card.generarBaraja();
+            Card cartaInicial = baraja.pop();
+            cartaInicial.removeMouseListener(cartaInicial);
+            comenzar = true;
+
+            // Se realiaza un for porque se necesita enviarle a cada cliente 7 cartas de la baraja distintas a cada uno (si se utiliza broadcastFromServer se enviarian las 7 mismas cartas a todos los jugadores)
+            for(int i = 0; i < contadorJugadores; i++) {
+              PacketData paqueteEnviar = new PacketData();
+              paqueteEnviar.barajaCartas = Card.comerCartas(baraja, 7);
+              paqueteEnviar.cartaInicial = cartaInicial;
+              paqueteEnviar.accion = ServerAction.START;
+              paqueteEnviar.turno = 0;
+              paqueteEnviar.nombre = apodos.get(i);
+              paqueteEnviar.apodosJugadores = apodos;
+
+              //Envia el paquete a todos los clientes
+              ClientHandler.sendPacketToClientFromServer(paqueteEnviar, i);
             }
-        });
-        panel.add(iniciar, BorderLayout.CENTER);
-        setSize(500,350);
-        setVisible(true);
+
+            setVisible(false);
+
+            // Panel de Pruebas para Debug 
+            SwingUtilities.invokeLater(()-> { new PanelDebug(this); });
+
+        } else {
+            JOptionPane.showMessageDialog(null, "Necesitas al menos dos jugadores + [ " + contadorJugadores + " ]", 
+            "Error de inicio", JOptionPane.ERROR_MESSAGE);
+        }
+    });
+    //
+    panel.add(iniciar, BorderLayout.CENTER);
+    setSize(500,350);
+    setVisible(true);
     }
 
   public void startServer() {
@@ -102,21 +126,17 @@ public class Server extends JFrame {
   }
 
   public static PacketData receiveClientMovement(PacketData Movement){
-    System.out.println("Paquete recibido: ");
-    System.out.println(Movement);
+    System.out.println("Paquete recibido de " + Movement.nombre);
+    System.out.println(Movement + "\n");
     if(Movement.accion.equals(ServerAction.NEW_ELEMENTS)){
       apodos.add(Movement.nombre);
-      System.out.println("Nuevo Tamanio arreglo server: " + apodos.size());
       Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
-      System.out.println("Nuevo Tamanio arreglo paquete: " + Movement.apodosJugadores.size());
-
-      
-    } else {
-
+    }
+    else {
       switch(Movement.accion){
 
         case THROW_CARD:
-            System.out.println("1");
+          System.out.println("Carta Tirada por " + Movement.nombre);
         break;
   
         case EAT:
