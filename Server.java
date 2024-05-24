@@ -130,12 +130,12 @@ public class Server extends JFrame {
   }
 
   public static PacketData receiveClientMovement(PacketData Movement){
-    System.out.println("Paquete recibido de " + Movement.nombre);
     System.out.println("Paquete recibido de " + Movement.nombre + "\n" + Movement);
       switch(Movement.accion){
         case NEW_ELEMENTS:
           apodos.add(Movement.nombre);
           Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
+          ClientHandler.broadcastPacketFromServer(Movement);
         break;
 
         case THROW_CARD:

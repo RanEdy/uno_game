@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 public class PlayerView extends JPanel {
@@ -11,14 +12,13 @@ public class PlayerView extends JPanel {
 
   private Card topeDePilaDeTiradas;
 
-  private int[] numCartasJugadores;
+  private ArrayList<Integer> numCartasJugadores = new ArrayList<>();
   private ArrayList<String> nombresJugadores;
   
   // Componentes visuales importantes
   private JPanel pilaTiradasPanel;
   private JPanel infoBottomPanel;
   private JPanel midPanel;
-  private JLabel nombresJugadoresLabel;
   private JLabel nombreTurnoActual;
   private JButton unoButton;
 
@@ -44,19 +44,22 @@ public class PlayerView extends JPanel {
 
     // Asignar la informacion del paquete
     nombresJugadores = datosIniciales.apodosJugadores;
+    
     for(int i = 0; i < nombresJugadores.size(); i++) {
       // Encuentra el indice de tu nombre y te lo coloca como tu turno
       if(datosIniciales.nombre.equals(nombresJugadores.get(i)))
         turno = i;
       else
-        numCartasJugadores[i] = datosIniciales.globalNumCartas.get(i);
+        numCartasJugadores.add(datosIniciales.globalNumCartas.get(i));
     }
 
     turnoGlobal = datosIniciales.turno;
 
-
+    System.out.println(" ------------------- Info ----------------");
     System.out.println("Jugadores: " + nombresJugadores.size());
+    System.out.println("Cartas Jugadores: " + numCartasJugadores);
     System.out.println("Numero de tu turno: " + turno);
+    System.out.println(" --------------------------------------------");
 
     LinkedList<Card> cartas = datosIniciales.barajaCartas;
 
@@ -106,7 +109,7 @@ public class PlayerView extends JPanel {
     infoBottomPanel.setLocation(0, getHeight()-70);
 
     unoButton = new JButton("UNO");
-    unoButton.setBackground(Color.ORANGE.darker());
+    unoButton.setBackground(Color.ORANGE);
     unoButton.setFont(font);
 
     nombreTurnoActual = new JLabel("");
@@ -195,6 +198,7 @@ public class PlayerView extends JPanel {
   public void paintComponent(Graphics g) {
     super.paintComponent(g);
     // Pintar el Fondo
+    Graphics2D g2d = (Graphics2D) g;
     g.drawImage(fondoEscalado.getImage(), 0, 0, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height, null);
 
     int offset = 50;
@@ -205,16 +209,40 @@ public class PlayerView extends JPanel {
     };
 
     if(numCartasJugadores != null)
-      for(int i = 0; i < numCartasJugadores.length; i++) {
-        g.drawImage(
-          imgCartas[i][numCartasJugadores[i]-1].getImage(), // imagen
-          posicionesImagenesCartas[i].x, // pos x
-          posicionesImagenesCartas[i].y, // pos y
-          imgCartasSize, // ancho
-          imgCartasSize, // alto
-          null // Observer
-        );
-      }
+      if(numCartasJugadores.size() > 0)
+        for(int i = 0; i < numCartasJugadores.size(); i++) {
+          int numCarta = numCartasJugadores.get(i);
+          int indexCarta;
+          if(numCarta > 5)
+            indexCarta = 4;
+          else
+            indexCarta = numCarta -1;
+          g.drawImage(
+            imgCartas[i][indexCarta].getImage(), // imagen
+            posicionesImagenesCartas[i].x, // pos x
+            posicionesImagenesCartas[i].y, // pos y
+            imgCartasSize, // ancho
+            imgCartasSize, // alto
+            null // Observer
+          );
+          if(numCarta > 5) {
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(Color.BLACK);
+            g2d.fillOval(
+              posicionesImagenesCartas[i].x + imgCartasSize/2 - 50,
+              posicionesImagenesCartas[i].y + imgCartasSize/2 - 50,
+              100,
+              100
+              );
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Consolas", Font.BOLD, 80));
+            g2d.drawString(
+              ""+numCarta,
+              posicionesImagenesCartas[i].x + imgCartasSize/2 - 25,
+              posicionesImagenesCartas[i].y + imgCartasSize/2 
+              );
+          }
+        }
   }
 
 }

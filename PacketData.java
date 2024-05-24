@@ -33,6 +33,7 @@ public class PacketData implements Serializable{
       }
       s += "\nTotal de jugadores: " + apodosJugadores.size() + "\n";
     }
+    s += "Cartas de Jugadores: " + globalNumCartas + "\n";
 
     return s;
   }

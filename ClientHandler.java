@@ -126,12 +126,7 @@ public class ClientHandler implements Runnable {
       try {
         //Lee el paquete del Cliente
         packetFromClient = (PacketData) entrada.readObject();
-        // Se lo envia al servidor
-        packetFromServer = Server.receiveClientMovement(packetFromClient);
-        System.out.println("Paquete devuelto por el servidor: ");
-        System.out.println(packetFromServer);
-        // Retransmite a todos los clientes
-        //broadcastPacket(packetFromServer);
+        Server.receiveClientMovement(packetFromClient);
       }
       catch(Exception e) {
         closeEverything();
