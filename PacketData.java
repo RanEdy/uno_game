@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 public class PacketData implements Serializable{
   public int turno; // Indice del jugador del turno actual (0-3)
+  public int direccion;
   public ServerAction accion; 
   public Card cartaDeCliente; // carta que se le envia al servidor desde el cliente
   public int numCartas; // numero de cartas de un cliente

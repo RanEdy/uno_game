@@ -9,6 +9,7 @@ import java.util.LinkedList;
 public class PlayerView extends JPanel {
   private int turno;
   public int turnoGlobal;
+  private int direccion;
 
   private Card topeDePilaDeTiradas;
 
@@ -32,6 +33,10 @@ public class PlayerView extends JPanel {
   // Variables para pintar el fondo
   private ImageIcon fondo = new ImageIcon("iconos/bg1.png");
   private ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
+
+  private int imgDireccionSize = ManejadorMesa.screenDim.height/3;
+  private ImageIcon imgDireccion1 = Card.generarImagen(new ImageIcon("iconos/direction1.png"), imgDireccionSize, imgDireccionSize);
+  private ImageIcon imgDireccion2 = Card.generarImagen(new ImageIcon("iconos/direction-1.png"), imgDireccionSize, imgDireccionSize);
 
   private int imgCartasSize = ManejadorMesa.screenDim.width/5;
   private ImageIcon imgCartas[][] = new ImageIcon[3][5];
@@ -57,6 +62,7 @@ public class PlayerView extends JPanel {
     }
 
     turnoGlobal = datosIniciales.turno;
+    direccion = datosIniciales.direccion;
 
     System.out.println(" ------------------- Info ----------------");
     System.out.println("Jugadores: " + nombresJugadoresGlobal.size());
@@ -205,6 +211,21 @@ public class PlayerView extends JPanel {
     // Pintar el Fondo
     Graphics2D g2d = (Graphics2D) g;
     g.drawImage(fondoEscalado.getImage(), 0, 0, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height, null);
+    Image imgDir;
+    //Pintar Direccion
+    if(direccion == 1)
+      imgDir = imgDireccion1.getImage();
+    else
+      imgDir = imgDireccion2.getImage();
+
+    g.drawImage(
+      imgDir,
+      getWidth()/2 - imgDireccionSize/2,
+      getHeight()/2 - imgDireccionSize/2,
+      imgDireccionSize, 
+      imgDireccionSize, 
+      null
+    );
 
     int offset = 50;
     Point[] posicionesImagenesCartas = {

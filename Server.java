@@ -6,7 +6,6 @@ import java.net.Socket;
 import java.util.*;
 import javax.swing.*;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 
@@ -68,6 +67,7 @@ public class Server extends JFrame {
               paqueteEnviar.cartaInicial = cartaInicial;
               paqueteEnviar.accion = ServerAction.START;
               paqueteEnviar.turno = 0;
+              paqueteEnviar.direccion = 1;
               paqueteEnviar.nombre = apodos.get(i);
               paqueteEnviar.apodosJugadores = apodos;
 
@@ -140,6 +140,7 @@ public class Server extends JFrame {
 
         case THROW_CARD:
           System.out.println("Carta Tirada por " + Movement.nombre);
+
         break;
   
         case EAT:
