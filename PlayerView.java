@@ -114,8 +114,10 @@ public class PlayerView extends JPanel {
     unoButton = new JButton("UNO");
     unoButton.setBackground(Color.ORANGE);
     unoButton.setFont(font);
+    unoButton.setEnabled(false);
 
     nombreTurnoActual = new JLabel("");
+    nombreTurnoActual.setBackground(Color.ORANGE);
     nombreTurnoActual.setFont(font);
     actualizarNombreTurnoActual();
 
