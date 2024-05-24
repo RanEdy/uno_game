@@ -11,7 +11,7 @@ public class PacketData implements Serializable{
   public Card cartaInicial;
 
   public LinkedList <Card> barajaCartas; // cartas enviadas del servidor al cliente (cuando come el cliente)
-  public int[] globalNumCartas; // numero de cartas de cada jugador
+  public ArrayList<Integer> globalNumCartas; // numero de cartas de cada jugador
   public String nombre; // nombre del cliente
   public ArrayList <String> apodosJugadores; // nombres de los jugadores
 
@@ -28,10 +28,10 @@ public class PacketData implements Serializable{
     int i = 1;
     if(apodosJugadores != null) {
       for(String apodo : apodosJugadores) {
-        s += "Apodo " + i + ": " + apodo + "\n";
+        s += "Apodo " + i + ": " + apodo + ", ";
         i++;
       }
-      s += "Total de jugadores: " + apodosJugadores.size() + "\n";
+      s += "\nTotal de jugadores: " + apodosJugadores.size() + "\n";
     }
 
     return s;

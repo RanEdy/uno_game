@@ -160,9 +160,10 @@ public class Card extends JPanel implements MouseListener {
     repaint();
   }
 
-  public Card copy() { 
+  public Card copy(boolean escalar) { 
     Card copia =  new Card(color, type);
-    copia.escalar(factorDeEscalado);
+    if(escalar)
+      copia.escalar(factorDeEscalado);
     return copia;
   }
 

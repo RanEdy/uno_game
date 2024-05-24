@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class PlayerView extends JPanel {
@@ -10,12 +12,15 @@ public class PlayerView extends JPanel {
   private Card topeDePilaDeTiradas;
 
   private int[] numCartasJugadores;
+  private ArrayList<String> nombresJugadores;
   
   // Componentes visuales importantes
   private JPanel pilaTiradasPanel;
   private JPanel infoBottomPanel;
   private JPanel midPanel;
-  private JLabel nombresJugadores;
+  private JLabel nombresJugadoresLabel;
+  private JLabel nombreTurnoActual;
+  private JButton unoButton;
 
   private PlayerDeck playerDeck;
 
@@ -27,29 +32,37 @@ public class PlayerView extends JPanel {
   private ImageIcon fondo = new ImageIcon("iconos/bg1.png");
   private ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
 
+  private int imgCartasSize = ManejadorMesa.screenDim.width/5;
+  private ImageIcon imgCartas[][] = new ImageIcon[3][5];
+
   public PlayerView(PacketData datosIniciales) {
     super();
-    setLayout(null);
+    setLayout(null); // utilizar setBounds para los componentes agregados
     setSize(ManejadorMesa.screenDim);
 
+    cargarImagenes();
+
     // Asignar la informacion del paquete
-    for(int i = 0; i < datosIniciales.apodosJugadores.size(); i++) {
+    nombresJugadores = datosIniciales.apodosJugadores;
+    for(int i = 0; i < nombresJugadores.size(); i++) {
       // Encuentra el indice de tu nombre y te lo coloca como tu turno
-      if(datosIniciales.nombre.equals(datosIniciales.apodosJugadores.get(i)))
+      if(datosIniciales.nombre.equals(nombresJugadores.get(i)))
         turno = i;
+      else
+        numCartasJugadores[i] = datosIniciales.globalNumCartas.get(i);
     }
 
     turnoGlobal = datosIniciales.turno;
 
-    numCartasJugadores = datosIniciales.globalNumCartas;
 
-    System.out.println("Jugadores: " + datosIniciales.apodosJugadores.size());
+    System.out.println("Jugadores: " + nombresJugadores.size());
     System.out.println("Numero de tu turno: " + turno);
 
     LinkedList<Card> cartas = datosIniciales.barajaCartas;
 
     // esto solo es para colocar el panel de la carta tope en el medio de la pantalla
-    Card referencia = cartas.getLast();
+    Card referencia = new Card(new CardColor(CardColor.BLACK), CardType.ONE);
+    referencia.escalar(0.7);
     pilaTiradasPanel = new JPanel(new BorderLayout(0,0));
     pilaTiradasPanel.setBorder(BorderFactory.createRaisedBevelBorder());
     //pilaTiradasPanel.setOpaque(false);
@@ -62,9 +75,10 @@ public class PlayerView extends JPanel {
     );
     setTope(datosIniciales.cartaInicial);
     //-------------------------------------------------------------------------------------------
+    
 
     playerDeck = new PlayerDeck(cartas);
-    playerDeck.setLocation(getWidth()/2 - playerDeck.getWidth()/2, getHeight()-playerDeck.getHeight()-50);
+    playerDeck.setLocation(getWidth()/2 - playerDeck.getWidth()/2, getHeight()-playerDeck.getHeight()-90);
 
     // Se tiene que hacer esto para repintar el fondo y que se siga viendo transparente (Cosas de Swing xd)
     playerDeck.addCardComponentListener(new ComponentAdapter() {
@@ -78,14 +92,35 @@ public class PlayerView extends JPanel {
 
     add(playerDeck);
     add(pilaTiradasPanel);
+
+    initInfoBottomPanel();
     
     setVisible(true);
   }
 
   private void initInfoBottomPanel() {
-    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-    infoBottomPanel.setBackground(Color.BLUE);
+    Font font = new Font("SansSerif", Font.BOLD, 25);
+    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+    infoBottomPanel.setSize(getWidth(), 50);
+    infoBottomPanel.setOpaque(false);
+    infoBottomPanel.setLocation(0, getHeight()-70);
 
+    unoButton = new JButton("UNO");
+    unoButton.setBackground(Color.ORANGE.darker());
+    unoButton.setFont(font);
+
+    nombreTurnoActual = new JLabel("");
+    nombreTurnoActual.setFont(font);
+    actualizarNombreTurnoActual();
+
+    infoBottomPanel.add(unoButton);
+    infoBottomPanel.add(nombreTurnoActual);
+
+    add(infoBottomPanel);
+  }
+
+  private void actualizarNombreTurnoActual() {
+    nombreTurnoActual.setText("TURNO: " + nombresJugadores.get(turnoGlobal));
   }
 
   public void setTope(Card tope) {
@@ -108,16 +143,16 @@ public class PlayerView extends JPanel {
     if(cartaSeleccionada.isValid(topeDePilaDeTiradas)) {
 
       playerDeck.removeCard(cartaSeleccionada);
-      Card copia = cartaSeleccionada.copy();
+      Card copia = cartaSeleccionada.copy(true);
       copia.setJugable(false);
 
       Point pilaPos = pilaTiradasPanel.getLocation();
       copia.setLocation(cartaPos);
 
-      // Esto solo hacerlo si el servidor responde
       add(copia);
       toPilaAnimation(copia, cartaPos, pilaPos);
       cartaSeleccionada.removeMouseListener(listenerCarta);
+      turno = -1; // esto se hace para que el jugador no pueda realizar varias acciones en su turno
 
       // Push al server de tirar carta
     }
@@ -148,10 +183,38 @@ public class PlayerView extends JPanel {
     }
   }
 
+  private void cargarImagenes() {
+    for(int y = 0; y < 3; y++) {
+      for(int x = 0; x < 5; x++) {
+        imgCartas[y][x] = Card.generarImagen(new ImageIcon("iconos/" + (x+1) + "cards" + y + ".png"), imgCartasSize, imgCartasSize);
+      }
+    }
+  }
+
   @Override
   public void paintComponent(Graphics g) {
     super.paintComponent(g);
+    // Pintar el Fondo
     g.drawImage(fondoEscalado.getImage(), 0, 0, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height, null);
+
+    int offset = 50;
+    Point[] posicionesImagenesCartas = {
+      new Point(-offset, getHeight()/2 - imgCartasSize/2), 
+      new Point(getWidth()/2 - imgCartasSize/2, -offset), 
+      new Point(getWidth() - imgCartasSize + offset, getHeight()/2 - imgCartasSize/2)
+    };
+
+    if(numCartasJugadores != null)
+      for(int i = 0; i < numCartasJugadores.length; i++) {
+        g.drawImage(
+          imgCartas[i][numCartasJugadores[i]-1].getImage(), // imagen
+          posicionesImagenesCartas[i].x, // pos x
+          posicionesImagenesCartas[i].y, // pos y
+          imgCartasSize, // ancho
+          imgCartasSize, // alto
+          null // Observer
+        );
+      }
   }
 
 }

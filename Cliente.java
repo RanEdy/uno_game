@@ -219,6 +219,7 @@ public class Cliente extends JFrame{
       @Override
       public void mouseClicked(MouseEvent e) {
         Card cartaSeleccionada = (Card) e.getSource();
+        // Si el turno del jugador coincide con el turno que tiene el servidor
         if(playerView.getTurno() == playerView.turnoGlobal) {
           if(cartaSeleccionada.getColorInt() != CardColor.BLACK) {
             playerView.actionTirarCartaComun(cartaSeleccionada, this);

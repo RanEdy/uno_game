@@ -56,9 +56,14 @@ public class Server extends JFrame {
             cartaInicial.removeMouseListener(cartaInicial);
             comenzar = true;
 
+            PacketData paqueteEnviar = new PacketData();
+            paqueteEnviar.globalNumCartas = new ArrayList<>(contadorJugadores);
+
+            // Rellenar el numero de cartas de cada jugador
+            for(int n = 0; n < contadorJugadores; n++)
+              paqueteEnviar.globalNumCartas.add(7);
             // Se realiaza un for porque se necesita enviarle a cada cliente 7 cartas de la baraja distintas a cada uno (si se utiliza broadcastFromServer se enviarian las 7 mismas cartas a todos los jugadores)
             for(int i = 0; i < contadorJugadores; i++) {
-              PacketData paqueteEnviar = new PacketData();
               paqueteEnviar.barajaCartas = Card.comerCartas(baraja, 7);
               paqueteEnviar.cartaInicial = cartaInicial;
               paqueteEnviar.accion = ServerAction.START;
@@ -69,11 +74,10 @@ public class Server extends JFrame {
               //Envia el paquete a todos los clientes
               ClientHandler.sendPacketToClientFromServer(paqueteEnviar, i);
             }
-
             setVisible(false);
 
             // Panel de Pruebas para Debug 
-            SwingUtilities.invokeLater(()-> { new PanelDebug(this); });
+            //SwingUtilities.invokeLater(()-> { new PanelDebug(this); });
 
         } else {
             JOptionPane.showMessageDialog(null, "Necesitas al menos dos jugadores + [ " + contadorJugadores + " ]", 
@@ -127,13 +131,12 @@ public class Server extends JFrame {
 
   public static PacketData receiveClientMovement(PacketData Movement){
     System.out.println("Paquete recibido de " + Movement.nombre);
-    System.out.println(Movement + "\n");
-    if(Movement.accion.equals(ServerAction.NEW_ELEMENTS)){
-      apodos.add(Movement.nombre);
-      Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
-    }
-    else {
+    System.out.println("Paquete recibido de " + Movement.nombre + "\n" + Movement);
       switch(Movement.accion){
+        case NEW_ELEMENTS:
+          apodos.add(Movement.nombre);
+          Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
+        break;
 
         case THROW_CARD:
           System.out.println("Carta Tirada por " + Movement.nombre);
@@ -170,8 +173,7 @@ public class Server extends JFrame {
         default:
             System.out.println("9");
         break;
-    }
-  }
+      }
     return Movement;
   }
 }
