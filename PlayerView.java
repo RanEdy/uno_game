@@ -13,7 +13,7 @@ public class PlayerView extends JPanel {
   private Card topeDePilaDeTiradas;
 
   private ArrayList<Integer> numCartasJugadores = new ArrayList<>();
-  private ArrayList<String> nombresJugadores;
+  private ArrayList<String> nombresJugadores = new ArrayList<>();
   
   // Componentes visuales importantes
   private JPanel pilaTiradasPanel;
@@ -43,14 +43,16 @@ public class PlayerView extends JPanel {
     cargarImagenes();
 
     // Asignar la informacion del paquete
-    nombresJugadores = datosIniciales.apodosJugadores;
     
-    for(int i = 0; i < nombresJugadores.size(); i++) {
+    for(int i = 0; i < datosIniciales.apodosJugadores.size(); i++) {
       // Encuentra el indice de tu nombre y te lo coloca como tu turno
-      if(datosIniciales.nombre.equals(nombresJugadores.get(i)))
+      if(datosIniciales.nombre.equals(datosIniciales.apodosJugadores.get(i)))
         turno = i;
-      else
+      // Si no es tu nombre se agregan la informacion de los otros
+      else {
         numCartasJugadores.add(datosIniciales.globalNumCartas.get(i));
+        nombresJugadores.add(datosIniciales.apodosJugadores.get(i));
+      }
     }
 
     turnoGlobal = datosIniciales.turno;
@@ -208,6 +210,13 @@ public class PlayerView extends JPanel {
       new Point(getWidth() - imgCartasSize + offset, getHeight()/2 - imgCartasSize/2)
     };
 
+    Point[] posicionesNombres = {
+      new Point(30, getHeight()/2 + imgCartasSize/2),
+      new Point(getWidth()/2 - imgCartasSize + offset, 30), 
+      new Point(getWidth() - imgCartasSize + offset, getHeight()/2 + imgCartasSize/2)
+
+    };
+
     if(numCartasJugadores != null)
       if(numCartasJugadores.size() > 0)
         for(int i = 0; i < numCartasJugadores.size(); i++) {
@@ -225,6 +234,8 @@ public class PlayerView extends JPanel {
             imgCartasSize, // alto
             null // Observer
           );
+
+          // Pintar el numero de cartas de cada jugador
           if(numCarta > 5) {
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2d.setColor(Color.BLACK);
@@ -235,13 +246,31 @@ public class PlayerView extends JPanel {
               100
               );
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Consolas", Font.BOLD, 80));
+            g2d.setFont(new Font("Consolas", Font.BOLD, 90));
             g2d.drawString(
               ""+numCarta,
-              posicionesImagenesCartas[i].x + imgCartasSize/2 - 25,
-              posicionesImagenesCartas[i].y + imgCartasSize/2 
+              posicionesImagenesCartas[i].x + imgCartasSize/2 - 22,
+              posicionesImagenesCartas[i].y + imgCartasSize/2 + 30 
               );
           }
+          // Pintar los nombres de cada jugador
+          g2d.setColor(Color.BLACK);
+          g2d.fillRoundRect(
+            posicionesNombres[i].x,
+            posicionesNombres[i].y,
+            150,
+            50,
+            25,
+            25
+            );
+            int fontSize = 30;
+          g2d.setColor(Color.WHITE);
+          g2d.setFont(new Font("SansSerif", Font.BOLD, fontSize));
+          g2d.drawString(
+            nombresJugadores.get(i),
+            posicionesNombres[i].x + 5,
+            posicionesNombres[i].y + fontSize
+          );
         }
   }
 
