@@ -36,6 +36,8 @@ public class ClientHandler implements Runnable {
         synchronized(clientHandler.salida) {
           try {
             if(clientHandler.clientNumber != packetDataToSend.turno) {
+              if(packetDataToSend.accion == ServerAction.EAT)
+                System.out.println("[broadcastPacketFromServer] Paquete Enviado:\n" + packetDataToSend);
                 clientHandler.salida.writeObject(packetDataToSend);
                 clientHandler.salida.flush();
             }
@@ -52,6 +54,7 @@ public class ClientHandler implements Runnable {
   public static void sendPacketToClientFromServer(PacketData packetDataToSend, int clientNum) {
     try {
       ClientHandler cliente = clientHandlers.get(clientNum);
+      System.out.println("[SendPacketToClientFromServer] Paquete Enviado:\n"+packetDataToSend);
       cliente.salida.writeObject(packetDataToSend);
       cliente.salida.flush();
     }
@@ -69,6 +72,9 @@ public class ClientHandler implements Runnable {
       for(ClientHandler clientHandler : clientHandlers) {
         synchronized(clientHandler.salida) {
           try {
+            if(packetDataToSend.accion == ServerAction.EAT) {
+              System.out.println("[Paquete Enviado desde broadcastPacket]: \n" + packetDataToSend);
+            }
             clientHandler.salida.writeObject(packetDataToSend);
             clientHandler.salida.flush();
           } catch(Exception e) {
@@ -112,7 +118,8 @@ public class ClientHandler implements Runnable {
         packetFromClient = (PacketData) entrada.readObject();
         // Informacion devuelta por el servidor despues de procesar el paquete enviado del cliente
         packetFromServer = Server.receiveClientMovement(packetFromClient);
-        //System.out.println("Paquete Enviado\n" + packetFromServer);
+        if(packetFromServer.accion == ServerAction.EAT)
+          System.out.println("[Paquete Enviado desde ClientHandler]\n" + packetFromServer);
         broadcastPacket(packetFromServer);
       }
       catch(Exception e) {

@@ -3,6 +3,7 @@ import java.util.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.*;
 import java.net.Socket;
 
@@ -99,6 +100,7 @@ public class Cliente extends JFrame{
 // -------------------------------------------------- Metodos de envio de informacion a el servidor ----------------------------------------------------------
     // Metodo para enviar un paquete al servidor
     public void sendMove(PacketData enviar) {
+      synchronized(salida) {
         try {
           salida.writeObject(enviar);
           //System.out.println("\nPaquete enviado:\n");
@@ -107,6 +109,7 @@ public class Cliente extends JFrame{
         } catch(Exception e) {
           e.printStackTrace();
         }
+      }
     }
 
     // Metodo que se utiliza para enviar el nombre de usuario al servidor cuando se crea el cliente
@@ -139,13 +142,21 @@ public class Cliente extends JFrame{
   // Hilo que espera una respuesta del servidor
   public void listenForMessage() {
       new Thread(() -> {
+        int comer = 1;
         while(connected && !socket.isClosed()) {
-          synchronized(entrada) {
             try {
-              PacketData packetDataFromServer = (PacketData) entrada.readObject();
-              System.out.println("Paquete Recibido del Servidor   \n");
-              System.out.println(packetDataFromServer + "\n");
-              procesarAccion(packetDataFromServer);
+              PacketData packetDataFromServer;
+              synchronized(entrada) {
+                packetDataFromServer = (PacketData) entrada.readObject();
+                System.out.println("Paquete Recibido del Servidor   \n");
+                System.out.println(packetDataFromServer + "\n");
+                if(comer == 1)
+                  procesarAccion(packetDataFromServer);
+                if(packetDataFromServer.accion == ServerAction.EAT)
+                  comer++;
+                else
+                  comer = 1;
+              }
             } 
             catch(EOFException eof) {
               closeEverything();
@@ -159,7 +170,7 @@ public class Cliente extends JFrame{
               e.printStackTrace();
               break;
             }
-          }
+          
         }
       }).start();
     }
@@ -173,6 +184,13 @@ public class Cliente extends JFrame{
           setVisible(false);
         break;
 
+        case END:
+          playerView.turnoGlobal = -1;
+          JOptionPane.showMessageDialog(null, "Ganador: " + paquete.nombre);
+          mesa.dispose();
+          dispose();
+        break;
+
         case UPDATE_INFO:
           playerView.actionUpdateInfo(paquete);
         break;
@@ -183,19 +201,48 @@ public class Cliente extends JFrame{
         break;
 
         case EAT:
-        System.out.println("2");
-        break;
-
-        case EAT_2:
-        System.out.println("3");
-        break;
-
-        case EAT_4:
-        System.out.println("4");
-        break;
-
-        case CHANGE_COLOR:
-        System.out.println("6");
+          int seleccion = -10;
+          PacketData paqueteEnviar = new PacketData();
+          if(!paquete.nombre.equals("Servidor")) {
+            if(paquete.cartaDeCliente != null) {
+              if(paquete.cartaDeCliente.getCardType() == CardType.EAT || paquete.cartaDeCliente.getCardType() == CardType.WILD_EAT) {
+                if(playerView.getPlayerDeck().buscarTipo(paquete.cartaDeCliente)) {
+                  seleccion = JOptionPane.showConfirmDialog(null, "Tienes al menos 1 carta disponible para concatenar, ¿Desea hacerlo?");
+                }
+                else {
+                  playerView.getPlayerDeck().addCard(paquete.barajaCartas);
+                  paqueteEnviar.accion = ServerAction.PASS;
+                  paqueteEnviar.nombre = username;
+                  paqueteEnviar.numCartas = playerView.getNumCartas();
+                  paqueteEnviar.turno = playerView.getTurno();
+                  System.out.println("[El Usuario no tiene para concatenar] Paquete enviado\n"+paqueteEnviar);
+                  sendMove(paqueteEnviar);
+                }
+                // Si el usuario respondio que no
+                if (seleccion == JOptionPane.NO_OPTION || seleccion == JOptionPane.CANCEL_OPTION) {
+                  playerView.getPlayerDeck().addCard(paquete.barajaCartas);
+                  paqueteEnviar.accion = ServerAction.PASS;
+                  paqueteEnviar.nombre = username;
+                  paqueteEnviar.numCartas = playerView.getNumCartas();
+                  paqueteEnviar.turno = playerView.getTurno();
+                  System.out.println("[Seleccion NO o CANCEL] Paquete enviado\n"+paqueteEnviar);
+                  sendMove(paqueteEnviar);
+                }
+              }
+            }
+          }
+          // Si el usuario nada mas le dio click a la baraja para comer 1 carta
+          else {
+            Card carta = paquete.cartaDeCliente.copy(true);
+            playerView.getPlayerDeck().addCard(carta);
+            paqueteEnviar.cartaDeCliente = playerView.getTope().copy(true);
+            paqueteEnviar.accion = ServerAction.UPDATE_INFO;
+            paqueteEnviar.nombre = username;
+            paqueteEnviar.numCartas = playerView.getNumCartas();
+            paqueteEnviar.turno = playerView.getTurno();
+            System.out.println("[Seleccion -10] Paquete enviado\n"+paqueteEnviar);
+            sendMove(paqueteEnviar);
+          }
         break;
 
         case UNO:
@@ -209,6 +256,9 @@ public class Cliente extends JFrame{
                 nomJugador[x].setText(nicknames.get(x) + " ");
                 panelJugador[x].setVisible(true);
             }     
+        break;
+
+        case PASS:
         break;
 
         default:
@@ -229,13 +279,59 @@ public class Cliente extends JFrame{
           Card cartaSeleccionada = (Card) e.getSource();
           // Si el turno del jugador coincide con el turno que tiene el servidor
           if(playerView.getTurno() == playerView.turnoGlobal) {
+            //Para cartas comunes
             if(cartaSeleccionada.getColorInt() != CardColor.BLACK) {
               PacketData enviar = playerView.actionTirarCartaComun(cartaSeleccionada, this);
               if(enviar != null) sendMove(enviar);
             }
+            // Para cartas de color
             else {
-              playerView.actionTirarCartaEspecial(cartaSeleccionada, this);
+              MouseListener ml = this;
+              // Se Muestra la opcion de colores
+              playerView.seleccionarColor();
+              int[] colores = { CardColor.RED, CardColor.BLUE, CardColor.YELLOW, CardColor.GREEN };
+              // Se colocan los listeners para cada boton
+              for(JButton b : playerView.getBotonesColor()) {
+                if(b.getActionListeners().length > 0)
+                  b.removeActionListener(b.getActionListeners()[0]);
+                
+                b.addActionListener((event) -> {
+                  int color = colores[Integer.parseInt(b.getName())];
+                  cartaSeleccionada.setColor(new CardColor(color));
+
+                  playerView.getMidPanel().setVisible(false);
+                  playerView.getPlayerDeck().setVisible(true);
+                  playerView.actionTirarCartaEspecial(cartaSeleccionada, ml);
+                  playerView.getPlayerDeck().removeCard(cartaSeleccionada);
+
+                  PacketData paqueteEnviar = new PacketData();
+                  paqueteEnviar.accion = ServerAction.THROW_CARD;
+                  paqueteEnviar.cartaDeCliente = cartaSeleccionada;
+                  paqueteEnviar.nombre = username;
+                  paqueteEnviar.numCartas = playerView.getNumCartas();
+                  paqueteEnviar.turno = playerView.getTurno();
+                  
+                  sendMove(paqueteEnviar);
+                });
+              }
             }
+          }
+        }
+      });
+
+      JLabel barajaSobrante = playerView.getBarajaSobrante();
+      barajaSobrante.addMouseListener(new MouseAdapter() {
+        @Override
+        public void mouseClicked(MouseEvent e) {
+          if(playerView.getTurno() == playerView.turnoGlobal) {
+            PacketData enviar = new PacketData();
+            enviar.nombre = username;
+            enviar.globalNumCartas = new ArrayList<>(playerView.getCartasJugadores());
+            enviar.turno = playerView.getTurno();
+            enviar.accion = ServerAction.EAT;
+            enviar.numCartas = playerView.getNumCartas();
+            System.out.println("[Click a Baraja] Paquete enviado:\n"+enviar);
+            sendMove(enviar);
           }
         }
       });

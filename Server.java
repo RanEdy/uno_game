@@ -20,7 +20,7 @@ public class Server extends JFrame {
   private JButton iniciar;
   private static int direccion = 1;
 
-  private Stack<Card> baraja;
+  private static Stack<Card> baraja;
 
   public Server(ServerSocket ss) {
     super("Servidor del UNO");
@@ -62,7 +62,7 @@ public class Server extends JFrame {
 
             PacketData paqueteEnviar = new PacketData();
             paqueteEnviar.globalNumCartas = new ArrayList<>(contadorJugadores);
-
+            
             // Rellenar el numero de cartas de cada jugador
             for(int n = 0; n < contadorJugadores; n++) {
               paqueteEnviar.globalNumCartas.add(7);
@@ -139,7 +139,7 @@ public class Server extends JFrame {
   // Importante: no modificar directamente los objetos del paquete recibido, en cambio crear uno nuevo y reemplazarlo
   // Nota: Siempre crear una nueva instancia de un ArrayList si se quiere modificar la informacion del paquete
   public static PacketData receiveClientMovement(PacketData Movement){
-    System.out.println("Paquete recibido de " + Movement.nombre + "\n" + Movement);
+    //System.out.println("Paquete recibido de " + Movement.nombre + "\n" + Movement);
       switch(Movement.accion){
         case NEW_ELEMENTS:
           apodos.add(Movement.nombre);
@@ -148,8 +148,11 @@ public class Server extends JFrame {
 
         case THROW_CARD:
           Card carta = Movement.cartaDeCliente.copy(false);
-          if(Movement.numCartas == 0)
+          if(Movement.numCartas == 0) {
             System.out.println(Movement.nombre + " Gano");
+            Movement.accion = ServerAction.END;
+            return Movement;
+          }
 
           // Reverso
           if(carta.getCardType() == CardType.REVERSE)
@@ -157,29 +160,58 @@ public class Server extends JFrame {
           // Reverso y bloqueo
           if(carta.getCardType() == CardType.REVERSE || carta.getCardType() == CardType.BLOCK)
             siguienteTurno();
+          
           siguienteTurno();
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
           Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
           Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
-          Movement.accion = ServerAction.UPDATE_INFO;
           Movement.turno = jugadorActual;
           Movement.direccion = direccion;
+          
+          if(carta.getCardType() == CardType.WILD_EAT || carta.getCardType() == CardType.EAT) {
+            // primero le actualizas la informacion al cliente de que ya es su turno
+            Movement.accion = ServerAction.UPDATE_INFO;
+            ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
+            // Despues le mandas a comer
+            Movement.accion = ServerAction.EAT;
+            if(baraja.size() <= 4)
+              baraja = Card.generarBaraja();
+            int cartasAComer = carta.getCardType() == CardType.WILD_EAT ? 4 : 2;
+            Movement.barajaCartas = Card.comerCartas(baraja, cartasAComer);
+            ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
+          }
+          Movement.accion = ServerAction.UPDATE_INFO;
+        break;
+
+        case PASS:
+          siguienteTurno();
+          numCartasJugadores.set(Movement.turno, Movement.numCartas);
+          Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
+          Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
+          Movement.turno = jugadorActual;
+          Movement.direccion = direccion;
+          Movement.accion = ServerAction.UPDATE_INFO;
+        break;
+
+        case UPDATE_INFO:
+          numCartasJugadores.set(Movement.turno, Movement.numCartas);
+          Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
+          Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
+          Movement.turno = jugadorActual;
+          Movement.direccion = direccion;
+          Movement.accion = ServerAction.UPDATE_INFO;
         break;
   
         case EAT:
-        System.out.println("2");
-        break;
-  
-        case EAT_2:
-        System.out.println("3");
-        break;
-  
-        case EAT_4:
-        System.out.println("4");
-        break;
-  
-        case CHANGE_COLOR:
-        System.out.println("6");
+          if(!baraja.isEmpty())
+            baraja = Card.generarBaraja();
+
+          Movement.cartaDeCliente = baraja.pop();
+          Movement.turno = jugadorActual;
+          Movement.accion = ServerAction.EAT;
+          Movement.nombre = "Servidor";
+          ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
+          Movement.accion = ServerAction.PASS;
         break;
   
         case UNO:

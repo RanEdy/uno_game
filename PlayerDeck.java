@@ -221,7 +221,16 @@ public class PlayerDeck extends JPanel {
 
   public int getListaCartasSize() {
     System.out.println("CartasListaSize: " + cartasLista.size());
-    return cartasLista.size(); }
+    return cartasLista.size();
+  }
+
+  public boolean buscarTipo(Card c) {
+    for(Card card : cartasLista) {
+      if(c.getCardType() == card.getCardType())
+        return true;
+    }
+    return false;
+  }
 
   private void updateListeners() {
     for(Card c : cartasLista) {

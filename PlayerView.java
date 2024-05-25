@@ -24,6 +24,9 @@ public class PlayerView extends JPanel {
   private JPanel midPanel;
   private JLabel nombreTurnoActual;
   private JButton unoButton;
+  private JLabel barajaSobrante;
+
+  private JButton botonesColor[] = new JButton[4];
 
   private PlayerDeck playerDeck;
 
@@ -34,6 +37,9 @@ public class PlayerView extends JPanel {
   // Variables para pintar el fondo
   private ImageIcon fondo = new ImageIcon("iconos/bg1.png");
   private ImageIcon fondoEscalado = Card.generarImagen(fondo, ManejadorMesa.screenDim.width, ManejadorMesa.screenDim.height);
+
+  private int imgBarajaSobranteSize = ManejadorMesa.screenDim.width/11;
+  private ImageIcon imgBarajaSobrante = Card.generarImagen(new ImageIcon("iconos/barajasobrante.png"), imgBarajaSobranteSize*11/10, imgBarajaSobranteSize-15);
 
   private int imgDireccionSize = ManejadorMesa.screenDim.height/3;
   private ImageIcon imgDireccion1 = Card.generarImagen(new ImageIcon("iconos/direction1.png"), imgDireccionSize, imgDireccionSize);
@@ -96,32 +102,60 @@ public class PlayerView extends JPanel {
     playerDeck.setLocation(getWidth()/2 - playerDeck.getWidth()/2, getHeight()-playerDeck.getHeight()-90);
 
     // Se tiene que hacer esto para repintar el fondo y que se siga viendo transparente (Cosas de Swing xd)
-    playerDeck.addCardComponentListener(new ComponentAdapter() {
+    playerDeck.addCardComponentListener(new ComponentAdapter() { public void componentMoved(ComponentEvent e) { repaint();}});
+
+    barajaSobrante = new JLabel(imgBarajaSobrante);
+    barajaSobrante.setSize(imgBarajaSobranteSize*11/10, imgBarajaSobranteSize-15);
+    barajaSobrante.setLocation(pilaTiradasPanel.getX()-barajaSobrante.getWidth()-150, pilaTiradasPanel.getY()-barajaSobrante.getHeight()/2 + 50);
+    barajaSobrante.addMouseListener(new MouseAdapter() {
       @Override
-      public void componentMoved(ComponentEvent e) {
-        repaint();
-        //playerDeck.repaint();
+      public void mouseEntered(MouseEvent e) {
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
+      }
+
+      @Override
+      public void mouseExited(MouseEvent e) {
+        setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
       }
     });
 
-
+    midPanel = new JPanel(new GridLayout(2,2));
+    midPanel.setSize(500, 600);
+    midPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 20, true));
+    midPanel.setLocation(getWidth()/2 - midPanel.getWidth()/2, getHeight()/2 - midPanel.getHeight()/2);
+    midPanel.setBackground(Color.WHITE);
+    midPanel.setVisible(false);
+    Color[] colores = { Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN };
+    for(int i = 0; i < 4; i++) {
+      JButton b = new JButton();
+      b.setSize(100, 100);
+      b.setBackground(colores[i]);
+      b.setName(""+i);
+      midPanel.add(b);
+      botonesColor[i] = b;
+    }
+    
+    add(barajaSobrante);
     add(playerDeck);
     add(pilaTiradasPanel);
+    add(midPanel);
 
     initInfoBottomPanel();
     
+    setComponentZOrder(midPanel, 0);
     setVisible(true);
   }
 
   private void initInfoBottomPanel() {
     Font font = new Font("SansSerif", Font.BOLD, 25);
-    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 35, 0));
+    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 35, 0));
     infoBottomPanel.setSize(getWidth(), 50);
     infoBottomPanel.setOpaque(false);
     infoBottomPanel.setLocation(0, getHeight()-70);
 
     JLabel nombreDeUsuario = new JLabel("NOMBRE: " + username);
     nombreDeUsuario.setFont(font);
+    nombreDeUsuario.setForeground(Color.WHITE);
 
     unoButton = new JButton("UNO");
     unoButton.setBackground(Color.ORANGE);
@@ -130,8 +164,18 @@ public class PlayerView extends JPanel {
 
     nombreTurnoActual = new JLabel("");
     nombreTurnoActual.setFont(font);
+    nombreTurnoActual.setForeground(Color.WHITE);
     actualizarNombreTurnoActual();
 
+    String orden = "";
+    for(String s : nombresJugadoresGlobal) {
+      orden += s + " => ";
+    }
+    JLabel ordenLabel = new JLabel("ORDEN: " + orden + nombresJugadoresGlobal.get(0) + "       ");
+    ordenLabel.setFont(new Font("Consolas", Font.PLAIN, 18));
+    ordenLabel.setForeground(Color.WHITE);
+
+    infoBottomPanel.add(ordenLabel);
     infoBottomPanel.add(nombreDeUsuario);
     infoBottomPanel.add(unoButton);
     infoBottomPanel.add(nombreTurnoActual);
@@ -140,7 +184,7 @@ public class PlayerView extends JPanel {
   }
 
   private void actualizarNombreTurnoActual() {
-    System.out.println("Juagdores Globales: " + nombresJugadoresGlobal);
+    System.out.println("Jugadores Globales: " + nombresJugadoresGlobal);
     nombreTurnoActual.setText("TURNO: " + nombresJugadoresGlobal.get(turnoGlobal));
     nombreTurnoActual.setBackground(Color.ORANGE);
   }
@@ -158,9 +202,19 @@ public class PlayerView extends JPanel {
 
   public int getTurno() { return turno; }
 
+  public Card getTope() { return topeDePilaDeTiradas; }
+
   public PlayerDeck getPlayerDeck() { return playerDeck; }
 
   public int getNumCartas() { return playerDeck.getListaCartasSize(); }
+
+  public ArrayList<Integer> getCartasJugadores() { return numCartasJugadores; }
+
+  public JLabel getBarajaSobrante() { return barajaSobrante; }
+
+  public JButton[] getBotonesColor() { return botonesColor; }
+
+  public JPanel getMidPanel() { return midPanel; }
 // -------------------------------------------------------- Metodos de Acciones -------------------------------------------------------
   public void actionUpdateInfo(PacketData informacionNueva) {
     ArrayList<Integer> globales = new ArrayList<>(informacionNueva.globalNumCartas);
@@ -210,7 +264,24 @@ public class PlayerView extends JPanel {
   }
 
   public void actionTirarCartaEspecial(Card cartaSeleccionada, MouseListener listenerCarta) {
+    Point cartaPos = cartaSeleccionada.getLocationOnScreen();
+    if(cartaSeleccionada.isValid(topeDePilaDeTiradas)) {
+      cartaSeleccionada.removeMouseListener(listenerCarta);
+      playerDeck.removeCard(cartaSeleccionada);
+      Card copia = cartaSeleccionada.copy(true);
+      copia.setJugable(false);
+      Point pilaPos = pilaTiradasPanel.getLocation();
+      copia.setLocation(cartaPos);
 
+      add(copia);
+      toPilaAnimation(copia, cartaPos, pilaPos);
+      setComponentZOrder(midPanel,0);
+    }
+  }
+
+  public void seleccionarColor() {
+    midPanel.setVisible(true);
+    playerDeck.setVisible(false);
   }
 // ---------------------------------------------------------------------------------------------------------------------------------------
   public synchronized void toPilaAnimation(Card card, Point inicio, Point fin) {
@@ -278,6 +349,7 @@ public class PlayerView extends JPanel {
 
     };
 
+    // Imagenes de cada carta
     if(numCartasJugadores != null)
       if(numCartasJugadores.size() > 0)
         for(int i = 0; i < numCartasJugadores.size(); i++) {
