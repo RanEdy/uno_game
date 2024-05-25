@@ -142,7 +142,7 @@ public class Cliente extends JFrame{
   // Hilo que espera una respuesta del servidor
   public void listenForMessage() {
       new Thread(() -> {
-        int comer = 1;
+        int duplicado = 1;
         while(connected && !socket.isClosed()) {
             try {
               PacketData packetDataFromServer;
@@ -150,12 +150,12 @@ public class Cliente extends JFrame{
                 packetDataFromServer = (PacketData) entrada.readObject();
                 System.out.println("Paquete Recibido del Servidor   \n");
                 System.out.println(packetDataFromServer + "\n");
-                if(comer == 1)
+                if(duplicado == 1)
                   procesarAccion(packetDataFromServer);
                 if(packetDataFromServer.accion == ServerAction.EAT)
-                  comer++;
+                  duplicado++;
                 else
-                  comer = 1;
+                  duplicado = 1;
               }
             } 
             catch(EOFException eof) {
