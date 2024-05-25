@@ -67,16 +67,16 @@ public class ClientHandler implements Runnable {
   // Reenviar el paquete a todos los clientes desde el cliente (cliente -> clientes)
   public void broadcastPacket(PacketData packetDataToSend) {
       for(ClientHandler clientHandler : clientHandlers) {
-        try {
-            if(clientHandler.clientNumber != packetDataToSend.turno) {
-                clientHandler.salida.writeObject(packetDataToSend);
-                clientHandler.salida.flush();
-            }
-        } catch(Exception e) {
-          System.out.println("problema aqui - 2");
-          closeEverything();
-          e.printStackTrace();
-        } 
+        synchronized(clientHandler.salida) {
+          try {
+            clientHandler.salida.writeObject(packetDataToSend);
+            clientHandler.salida.flush();
+          } catch(Exception e) {
+            System.out.println("problema aqui - 2");
+            closeEverything();
+            e.printStackTrace();
+          } 
+        }
       }
   }
 
@@ -110,8 +110,9 @@ public class ClientHandler implements Runnable {
       try {
         //Lee el paquete del Cliente
         packetFromClient = (PacketData) entrada.readObject();
+        // Informacion devuelta por el servidor despues de procesar el paquete enviado del cliente
         packetFromServer = Server.receiveClientMovement(packetFromClient);
-        System.out.println("Paquete Enviado\n" + packetFromServer);
+        //System.out.println("Paquete Enviado\n" + packetFromServer);
         broadcastPacket(packetFromServer);
       }
       catch(Exception e) {

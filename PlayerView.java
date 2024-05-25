@@ -67,6 +67,7 @@ public class PlayerView extends JPanel {
     username = datosIniciales.nombre;
 
     System.out.println(" ------------------- Info ----------------");
+    System.out.println("Nombre: " + username);
     System.out.println("Jugadores: " + nombresJugadoresGlobal.size());
     System.out.println("Cartas Jugadores: " + numCartasJugadores);
     System.out.println("Numero de tu turno: " + turno);
@@ -139,6 +140,7 @@ public class PlayerView extends JPanel {
   }
 
   private void actualizarNombreTurnoActual() {
+    System.out.println("Juagdores Globales: " + nombresJugadoresGlobal);
     nombreTurnoActual.setText("TURNO: " + nombresJugadoresGlobal.get(turnoGlobal));
     nombreTurnoActual.setBackground(Color.ORANGE);
   }
@@ -161,29 +163,31 @@ public class PlayerView extends JPanel {
   public int getNumCartas() { return playerDeck.getListaCartasSize(); }
 // -------------------------------------------------------- Metodos de Acciones -------------------------------------------------------
   public void actionUpdateInfo(PacketData informacionNueva) {
-    System.out.println("Informacion actualizada\n" + informacionNueva);
+    ArrayList<Integer> globales = new ArrayList<>(informacionNueva.globalNumCartas);
     ArrayList<Integer> nuevasCartas = new ArrayList<>();
     for(int i = 0; i < informacionNueva.apodosJugadores.size(); i++) {
       if(!username.equals(informacionNueva.apodosJugadores.get(i))) {
-        nuevasCartas.add(informacionNueva.globalNumCartas.get(i));
+        nuevasCartas.add(globales.get(i));
       }
     }
+
     numCartasJugadores = nuevasCartas;
-    System.out.println("Cartas actualizadas: " + numCartasJugadores);
     turnoGlobal = informacionNueva.turno;
     direccion = informacionNueva.direccion;
-    Card cartaRecibida = informacionNueva.cartaDeCliente;
+
+    Card cartaRecibida = informacionNueva.cartaDeCliente.copy(true);
     cartaRecibida.setJugable(false);
     cartaRecibida.removeMouseListener(cartaRecibida);
     actualizarNombreTurnoActual();
     setTope(cartaRecibida);
+    repaint();
 
   }
 
-  public void actionTirarCartaComun(Card cartaSeleccionada, MouseListener listenerCarta) {
+  public PacketData actionTirarCartaComun(Card cartaSeleccionada, MouseListener listenerCarta) {
     Point cartaPos = cartaSeleccionada.getLocationOnScreen();
     if(cartaSeleccionada.isValid(topeDePilaDeTiradas)) {
-
+      cartaSeleccionada.removeMouseListener(listenerCarta);
       playerDeck.removeCard(cartaSeleccionada);
       Card copia = cartaSeleccionada.copy(true);
       copia.setJugable(false);
@@ -193,11 +197,16 @@ public class PlayerView extends JPanel {
 
       add(copia);
       toPilaAnimation(copia, cartaPos, pilaPos);
-      cartaSeleccionada.removeMouseListener(listenerCarta);
-      turno = -1; // esto se hace para que el jugador no pueda realizar varias acciones en su turno
-
+      PacketData paqueteEnviar = new PacketData();
+      paqueteEnviar.accion = ServerAction.THROW_CARD;
+      paqueteEnviar.cartaDeCliente = cartaSeleccionada;
+      paqueteEnviar.nombre = username;
+      paqueteEnviar.numCartas = getNumCartas();
+      paqueteEnviar.turno = turno;
+      return paqueteEnviar;
       // Push al server de tirar carta
     }
+    return null;
   }
 
   public void actionTirarCartaEspecial(Card cartaSeleccionada, MouseListener listenerCarta) {

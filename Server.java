@@ -137,6 +137,7 @@ public class Server extends JFrame {
   }
 
   // Importante: no modificar directamente los objetos del paquete recibido, en cambio crear uno nuevo y reemplazarlo
+  // Nota: Siempre crear una nueva instancia de un ArrayList si se quiere modificar la informacion del paquete
   public static PacketData receiveClientMovement(PacketData Movement){
     System.out.println("Paquete recibido de " + Movement.nombre + "\n" + Movement);
       switch(Movement.accion){
@@ -146,16 +147,18 @@ public class Server extends JFrame {
         break;
 
         case THROW_CARD:
+          Card carta = Movement.cartaDeCliente.copy(false);
+          if(Movement.numCartas == 0)
+            System.out.println(Movement.nombre + " Gano");
+          if(carta.getCardType() == CardType.REVERSE)
+            direccion *= -1;
           siguienteTurno();
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
-          System.out.println("Carta Tirada por " + Movement.nombre);
           Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
-          Movement.globalNumCartas = numCartasJugadores;
+          Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
           Movement.accion = ServerAction.UPDATE_INFO;
           Movement.turno = jugadorActual;
           Movement.direccion = direccion;
-          ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
-          
         break;
   
         case EAT:
@@ -168,10 +171,6 @@ public class Server extends JFrame {
   
         case EAT_4:
         System.out.println("4");
-        break;
-  
-        case CHANGE_DIRECTION:
-        System.out.println("5");
         break;
   
         case CHANGE_COLOR:

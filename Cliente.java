@@ -101,8 +101,8 @@ public class Cliente extends JFrame{
     public void sendMove(PacketData enviar) {
         try {
           salida.writeObject(enviar);
-          System.out.println("\nPaquete enviado:\n");
-          System.out.println(enviar);
+          //System.out.println("\nPaquete enviado:\n");
+          //System.out.println(enviar);
           salida.flush();
         } catch(Exception e) {
           e.printStackTrace();
@@ -143,7 +143,7 @@ public class Cliente extends JFrame{
           synchronized(entrada) {
             try {
               PacketData packetDataFromServer = (PacketData) entrada.readObject();
-              System.out.println("    Paquete Recibido del Servidor   \n");
+              System.out.println("Paquete Recibido del Servidor   \n");
               System.out.println(packetDataFromServer + "\n");
               procesarAccion(packetDataFromServer);
             } 
@@ -194,10 +194,6 @@ public class Cliente extends JFrame{
         System.out.println("4");
         break;
 
-        case CHANGE_DIRECTION:
-        System.out.println("5");
-        break;
-
         case CHANGE_COLOR:
         System.out.println("6");
         break;
@@ -238,18 +234,12 @@ public class Cliente extends JFrame{
           // Si el turno del jugador coincide con el turno que tiene el servidor
           if(playerView.getTurno() == playerView.turnoGlobal) {
             if(cartaSeleccionada.getColorInt() != CardColor.BLACK) {
-              playerView.actionTirarCartaComun(cartaSeleccionada, this);
+              PacketData enviar = playerView.actionTirarCartaComun(cartaSeleccionada, this);
+              if(enviar != null) sendMove(enviar);
             }
             else {
               playerView.actionTirarCartaEspecial(cartaSeleccionada, this);
             }
-            // Se le envia un paquete al Servidor
-            PacketData paqueteEnviar = new PacketData();
-            paqueteEnviar.accion = ServerAction.THROW_CARD;
-            paqueteEnviar.cartaDeCliente = cartaSeleccionada;
-            paqueteEnviar.nombre = username;
-            paqueteEnviar.numCartas = playerView.getNumCartas();
-            sendMove(paqueteEnviar);
           }
         }
       });

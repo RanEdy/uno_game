@@ -219,7 +219,9 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
-  public int getListaCartasSize() { return cartasLista.size(); }
+  public int getListaCartasSize() {
+    System.out.println("CartasListaSize: " + cartasLista.size());
+    return cartasLista.size(); }
 
   private void updateListeners() {
     for(Card c : cartasLista) {
