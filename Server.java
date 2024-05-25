@@ -150,8 +150,13 @@ public class Server extends JFrame {
           Card carta = Movement.cartaDeCliente.copy(false);
           if(Movement.numCartas == 0)
             System.out.println(Movement.nombre + " Gano");
+
+          // Reverso
           if(carta.getCardType() == CardType.REVERSE)
             direccion *= -1;
+          // Reverso y bloqueo
+          if(carta.getCardType() == CardType.REVERSE || carta.getCardType() == CardType.BLOCK)
+            siguienteTurno();
           siguienteTurno();
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
           Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
@@ -175,10 +180,6 @@ public class Server extends JFrame {
   
         case CHANGE_COLOR:
         System.out.println("6");
-        break;
-  
-        case BLOCK:
-        System.out.println("7");
         break;
   
         case UNO:

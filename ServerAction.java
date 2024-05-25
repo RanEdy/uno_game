@@ -7,7 +7,6 @@ public enum ServerAction {
   EAT_2, 
   EAT_4,
   CHANGE_COLOR,
-  BLOCK,
   UNO,
   NEW_ELEMENTS,
   ERROR

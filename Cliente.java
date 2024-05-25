@@ -198,10 +198,6 @@ public class Cliente extends JFrame{
         System.out.println("6");
         break;
 
-        case BLOCK:
-        System.out.println("7");
-        break;
-
         case UNO:
         System.out.println("8");                    
         break;
