@@ -10,6 +10,7 @@ public class PlayerView extends JPanel {
   private int turno;
   public int turnoGlobal;
   private int direccion;
+  private String username;
 
   private Card topeDePilaDeTiradas;
 
@@ -63,6 +64,7 @@ public class PlayerView extends JPanel {
 
     turnoGlobal = datosIniciales.turno;
     direccion = datosIniciales.direccion;
+    username = datosIniciales.nombre;
 
     System.out.println(" ------------------- Info ----------------");
     System.out.println("Jugadores: " + nombresJugadoresGlobal.size());
@@ -112,10 +114,13 @@ public class PlayerView extends JPanel {
 
   private void initInfoBottomPanel() {
     Font font = new Font("SansSerif", Font.BOLD, 25);
-    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 35, 0));
     infoBottomPanel.setSize(getWidth(), 50);
     infoBottomPanel.setOpaque(false);
     infoBottomPanel.setLocation(0, getHeight()-70);
+
+    JLabel nombreDeUsuario = new JLabel("NOMBRE: " + username);
+    nombreDeUsuario.setFont(font);
 
     unoButton = new JButton("UNO");
     unoButton.setBackground(Color.ORANGE);
@@ -123,10 +128,10 @@ public class PlayerView extends JPanel {
     unoButton.setEnabled(false);
 
     nombreTurnoActual = new JLabel("");
-    nombreTurnoActual.setBackground(Color.ORANGE);
     nombreTurnoActual.setFont(font);
     actualizarNombreTurnoActual();
 
+    infoBottomPanel.add(nombreDeUsuario);
     infoBottomPanel.add(unoButton);
     infoBottomPanel.add(nombreTurnoActual);
 
@@ -135,6 +140,7 @@ public class PlayerView extends JPanel {
 
   private void actualizarNombreTurnoActual() {
     nombreTurnoActual.setText("TURNO: " + nombresJugadoresGlobal.get(turnoGlobal));
+    nombreTurnoActual.setBackground(Color.ORANGE);
   }
 
   public void setTope(Card tope) {
@@ -151,7 +157,29 @@ public class PlayerView extends JPanel {
   public int getTurno() { return turno; }
 
   public PlayerDeck getPlayerDeck() { return playerDeck; }
+
+  public int getNumCartas() { return playerDeck.getListaCartasSize(); }
 // -------------------------------------------------------- Metodos de Acciones -------------------------------------------------------
+  public void actionUpdateInfo(PacketData informacionNueva) {
+    System.out.println("Informacion actualizada\n" + informacionNueva);
+    ArrayList<Integer> nuevasCartas = new ArrayList<>();
+    for(int i = 0; i < informacionNueva.apodosJugadores.size(); i++) {
+      if(!username.equals(informacionNueva.apodosJugadores.get(i))) {
+        nuevasCartas.add(informacionNueva.globalNumCartas.get(i));
+      }
+    }
+    numCartasJugadores = nuevasCartas;
+    System.out.println("Cartas actualizadas: " + numCartasJugadores);
+    turnoGlobal = informacionNueva.turno;
+    direccion = informacionNueva.direccion;
+    Card cartaRecibida = informacionNueva.cartaDeCliente;
+    cartaRecibida.setJugable(false);
+    cartaRecibida.removeMouseListener(cartaRecibida);
+    actualizarNombreTurnoActual();
+    setTope(cartaRecibida);
+
+  }
+
   public void actionTirarCartaComun(Card cartaSeleccionada, MouseListener listenerCarta) {
     Point cartaPos = cartaSeleccionada.getLocationOnScreen();
     if(cartaSeleccionada.isValid(topeDePilaDeTiradas)) {
@@ -220,8 +248,8 @@ public class PlayerView extends JPanel {
 
     g.drawImage(
       imgDir,
-      getWidth()/2 - imgDireccionSize/2,
-      getHeight()/2 - imgDireccionSize/2,
+      getWidth()/2 - imgDireccionSize/2 + 2,
+      getHeight()/2 - imgDireccionSize/2 + 10,
       imgDireccionSize, 
       imgDireccionSize, 
       null
@@ -237,7 +265,7 @@ public class PlayerView extends JPanel {
     Point[] posicionesNombres = {
       new Point(30, getHeight()/2 + imgCartasSize/2),
       new Point(getWidth()/2 - imgCartasSize + offset, 30), 
-      new Point(getWidth() - imgCartasSize + offset, getHeight()/2 + imgCartasSize/2)
+      new Point(getWidth() - imgCartasSize/2, getHeight()/2 + imgCartasSize/2)
 
     };
 

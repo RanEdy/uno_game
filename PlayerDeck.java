@@ -219,6 +219,8 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
+  public int getListaCartasSize() { return cartasLista.size(); }
+
   private void updateListeners() {
     for(Card c : cartasLista) {
       for(MouseListener ml : mouseListeners) {

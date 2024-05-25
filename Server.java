@@ -13,10 +13,12 @@ public class Server extends JFrame {
   private ServerSocket serverSocket;
 
   private static ArrayList <String> apodos;
-  private int contadorJugadores = 0;
+  private static ArrayList<Integer> numCartasJugadores = new ArrayList<>();
+  private static int contadorJugadores = 0;
   private boolean comenzar = false;
-  private int jugadorActual = 0;
+  private static int jugadorActual = 0;
   private JButton iniciar;
+  private static int direccion = 1;
 
   private Stack<Card> baraja;
 
@@ -50,24 +52,29 @@ public class Server extends JFrame {
     // Boton iniciar
     iniciar.addActionListener((ActionEvent evento) -> {
         if(contadorJugadores >= 1){
+            Random rand = new Random();
             baraja = Card.generarBaraja();
             Card cartaInicial = baraja.pop();
             cartaInicial.removeMouseListener(cartaInicial);
+            if(cartaInicial.getColorInt() == CardColor.BLACK)
+              cartaInicial.setColor(new CardColor(rand.nextInt(4)));
             comenzar = true;
 
             PacketData paqueteEnviar = new PacketData();
             paqueteEnviar.globalNumCartas = new ArrayList<>(contadorJugadores);
 
             // Rellenar el numero de cartas de cada jugador
-            for(int n = 0; n < contadorJugadores; n++)
+            for(int n = 0; n < contadorJugadores; n++) {
               paqueteEnviar.globalNumCartas.add(7);
+              numCartasJugadores.add(7);
+            }
             // Se realiaza un for porque se necesita enviarle a cada cliente 7 cartas de la baraja distintas a cada uno (si se utiliza broadcastFromServer se enviarian las 7 mismas cartas a todos los jugadores)
             for(int i = 0; i < contadorJugadores; i++) {
               paqueteEnviar.barajaCartas = Card.comerCartas(baraja, 7);
               paqueteEnviar.cartaInicial = cartaInicial;
               paqueteEnviar.accion = ServerAction.START;
               paqueteEnviar.turno = 0;
-              paqueteEnviar.direccion = 1;
+              paqueteEnviar.direccion = direccion;
               paqueteEnviar.nombre = apodos.get(i);
               paqueteEnviar.apodosJugadores = apodos;
 
@@ -129,18 +136,26 @@ public class Server extends JFrame {
     server.startServer();
   }
 
+  // Importante: no modificar directamente los objetos del paquete recibido, en cambio crear uno nuevo y reemplazarlo
   public static PacketData receiveClientMovement(PacketData Movement){
     System.out.println("Paquete recibido de " + Movement.nombre + "\n" + Movement);
       switch(Movement.accion){
         case NEW_ELEMENTS:
           apodos.add(Movement.nombre);
           Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
-          ClientHandler.broadcastPacketFromServer(Movement);
         break;
 
         case THROW_CARD:
+          siguienteTurno();
+          numCartasJugadores.set(Movement.turno, Movement.numCartas);
           System.out.println("Carta Tirada por " + Movement.nombre);
-
+          Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
+          Movement.globalNumCartas = numCartasJugadores;
+          Movement.accion = ServerAction.UPDATE_INFO;
+          Movement.turno = jugadorActual;
+          Movement.direccion = direccion;
+          ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
+          
         break;
   
         case EAT:
@@ -176,6 +191,14 @@ public class Server extends JFrame {
         break;
       }
     return Movement;
+  }
+
+  public static void siguienteTurno() {
+    jugadorActual += direccion;
+    if(jugadorActual >= contadorJugadores)
+      jugadorActual = 0;
+    if(jugadorActual < 0)
+      jugadorActual = contadorJugadores-1;
   }
 }
 

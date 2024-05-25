@@ -33,24 +33,18 @@ public class ClientHandler implements Runnable {
   // Reenviar el paquete a todos los clientes desde el servidor (servidor -> clientes)
   public static void broadcastPacketFromServer(PacketData packetDataToSend) {
       for(ClientHandler clientHandler : clientHandlers) {
-        try {
-            if(packetDataToSend.accion.equals(ServerAction.NEW_ELEMENTS)){
-                clientHandler.salida.writeObject(packetDataToSend);
-                clientHandler.salida.flush();
-            } else if(packetDataToSend.accion.equals(ServerAction.ERROR)){
-                if(clientHandler.clientNumber == packetDataToSend.turno) {
-                    clientHandler.salida.writeObject(packetDataToSend);
-                    clientHandler.salida.flush();
-                }
-            } else if(clientHandler.clientNumber != packetDataToSend.turno) {
+        synchronized(clientHandler.salida) {
+          try {
+            if(clientHandler.clientNumber != packetDataToSend.turno) {
                 clientHandler.salida.writeObject(packetDataToSend);
                 clientHandler.salida.flush();
             }
             
-        } catch(Exception e) {
-          System.out.println("problema aqui - 2");
-          e.printStackTrace();
-        } 
+          } catch(Exception e) {
+            System.out.println("problema aqui - 2");
+            e.printStackTrace();
+          } 
+        }
       }
   }
 
@@ -74,19 +68,9 @@ public class ClientHandler implements Runnable {
   public void broadcastPacket(PacketData packetDataToSend) {
       for(ClientHandler clientHandler : clientHandlers) {
         try {
-            if(packetDataToSend.accion.equals(ServerAction.NEW_ELEMENTS)){
+            if(clientHandler.clientNumber != packetDataToSend.turno) {
                 clientHandler.salida.writeObject(packetDataToSend);
                 clientHandler.salida.flush();
-            } else if(packetDataToSend.accion.equals(ServerAction.ERROR)){
-                if(clientHandler.clientNumber == packetDataToSend.turno) {
-                    clientHandler.salida.writeObject(packetDataToSend);
-                    clientHandler.salida.flush();
-                }
-            } else {
-              if(clientHandler.clientNumber != packetDataToSend.turno) {
-                  clientHandler.salida.writeObject(packetDataToSend);
-                  clientHandler.salida.flush();
-              }
             }
         } catch(Exception e) {
           System.out.println("problema aqui - 2");
@@ -126,7 +110,9 @@ public class ClientHandler implements Runnable {
       try {
         //Lee el paquete del Cliente
         packetFromClient = (PacketData) entrada.readObject();
-        Server.receiveClientMovement(packetFromClient);
+        packetFromServer = Server.receiveClientMovement(packetFromClient);
+        System.out.println("Paquete Enviado\n" + packetFromServer);
+        broadcastPacket(packetFromServer);
       }
       catch(Exception e) {
         closeEverything();

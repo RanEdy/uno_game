@@ -1,4 +1,5 @@
 public enum ServerAction {
+  UPDATE_INFO,
   WAIT,
   START,
   THROW_CARD, 
