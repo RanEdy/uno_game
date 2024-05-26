@@ -19,7 +19,7 @@ public class Server extends JFrame {
   private static int jugadorActual = 0;
   private JButton iniciar;
   private static int direccion = 1;
-  private final int numCartasIniciales = 7;
+  private final int numCartasIniciales = 2;
 
   private static Stack<Card> baraja;
 
@@ -53,12 +53,11 @@ public class Server extends JFrame {
     // Boton iniciar
     iniciar.addActionListener((ActionEvent evento) -> {
         if(contadorJugadores >= 1){
-            Random rand = new Random();
+            
             baraja = Card.generarBaraja();
-            Card cartaInicial = baraja.pop();
+            Card cartaInicial = new Card(new CardColor(CardColor.BLACK), CardType.WILD);
             cartaInicial.removeMouseListener(cartaInicial);
-            if(cartaInicial.getColorInt() == CardColor.BLACK)
-              cartaInicial.setColor(new CardColor(rand.nextInt(4)));
+            cartaInicial.escalar(0.7);
             comenzar = true;
 
             PacketData paqueteEnviar = new PacketData();
@@ -158,7 +157,7 @@ public class Server extends JFrame {
           if(carta.getCardType() == CardType.REVERSE)
             direccion *= -1;
           // Reverso y bloqueo
-          if(carta.getCardType() == CardType.REVERSE || carta.getCardType() == CardType.BLOCK)
+          if(carta.getCardType() == CardType.BLOCK)
             siguienteTurno();
           
           siguienteTurno();
@@ -219,7 +218,10 @@ public class Server extends JFrame {
         case EAT:
           if(!baraja.isEmpty())
             baraja = Card.generarBaraja();
-          Card c = baraja.pop();
+          LinkedList<Card> cartasComidas = new LinkedList<>();
+          for(int i = 0; i < Movement.cartasComer; i++) {
+            cartasComidas.add(baraja.pop());
+          }
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
           Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
 
@@ -227,11 +229,12 @@ public class Server extends JFrame {
           nuevoPaquete.turno = Movement.turno;
           nuevoPaquete.accion = ServerAction.EAT;
           nuevoPaquete.nombre = "Servidor";
-          nuevoPaquete.cartaDeCliente = c.copy(true);
+          nuevoPaquete.cartaDeCliente = new Card(new CardColor(CardColor.BLUE), CardType.ONE);
           nuevoPaquete.apodosJugadores = (ArrayList<String>) apodos.clone();
           nuevoPaquete.globalNumCartas = new ArrayList<Integer>(numCartasJugadores);
+          nuevoPaquete.barajaCartas = new LinkedList<>(cartasComidas);
           ClientHandler.sendPacketToClientFromServer(nuevoPaquete, nuevoPaquete.turno);
-
+          
           // Si el jugador tenia una carta valida para poner, pero decidio comer entonces se pasa su turno
           for(Card card : Movement.barajaCartas) {
             if(card.isValid(Movement.cartaDeCliente)) {
@@ -239,8 +242,8 @@ public class Server extends JFrame {
               break;
             }
           }
-          Movement.cartaDeCliente = c.copy(true);
           Movement.turno = jugadorActual;
+          Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
           Movement.nombre = "Servidor";
           Movement.accion = ServerAction.UPDATE_INFO;
         break;

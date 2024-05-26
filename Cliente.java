@@ -206,7 +206,7 @@ public class Cliente extends JFrame{
           int seleccion = -10;
           PacketData paqueteEnviar = new PacketData();
           dichoUNO = false;
-          // Si el paquete es del servidor 
+          
           if(!paquete.nombre.equals("Servidor")) {
             if(paquete.cartaDeCliente != null) {
               if(paquete.cartaDeCliente.getCardType() == CardType.EAT || paquete.cartaDeCliente.getCardType() == CardType.WILD_EAT) {
@@ -227,6 +227,7 @@ public class Cliente extends JFrame{
                   paqueteEnviar.numCartas = playerView.getNumCartas();
                   paqueteEnviar.turno = playerView.getTurno();
                   paqueteEnviar.globalNumCartas = playerView.getCartasJugadores();
+                  cartasAcumuladas.clear();
                   System.out.println("[El Jugador no tiene para concatenar] Paquete enviado\n"+paqueteEnviar);
                   new Audio("sfx/comer.wav", 0.6f);
                   sendMove(paqueteEnviar);
@@ -240,6 +241,7 @@ public class Cliente extends JFrame{
                   paqueteEnviar.numCartas = playerView.getNumCartas();
                   paqueteEnviar.turno = playerView.getTurno();
                   paqueteEnviar.globalNumCartas = playerView.getCartasJugadores();
+                  cartasAcumuladas.clear();
                   System.out.println("[Seleccion NO o CANCEL] Paquete enviado\n"+paqueteEnviar);
                   new Audio("sfx/comer.wav", 0.8f);
                   sendMove(paqueteEnviar);
@@ -249,14 +251,14 @@ public class Cliente extends JFrame{
           }
           // Si el usuario nada mas le dio click a la baraja para comer 1 carta
           else {
-            Card carta = paquete.cartaDeCliente.copy(true);
-            playerView.getPlayerDeck().addCard(carta);
+            playerView.getPlayerDeck().addCard(new LinkedList<>(paquete.barajaCartas));
             paqueteEnviar.cartaDeCliente = playerView.getTope().copy(true);
             paqueteEnviar.accion = ServerAction.UPDATE_INFO;
             paqueteEnviar.nombre = username;
             paqueteEnviar.numCartas = playerView.getNumCartas();
             paqueteEnviar.turno = playerView.getTurno();
-            paqueteEnviar.globalNumCartas = playerView.getCartasJugadores();
+            paqueteEnviar.globalNumCartas = new ArrayList<Integer>(playerView.getCartasJugadores());
+            cartasAcumuladas.clear();
             System.out.println("[Seleccion -10] Paquete enviado\n"+paqueteEnviar);
             new Audio("sfx/comer.wav", 0.8f);
             sendMove(paqueteEnviar);
@@ -365,6 +367,7 @@ public class Cliente extends JFrame{
             enviar.numCartas = playerView.getNumCartas();
             enviar.apodosJugadores = new ArrayList<>(playerView.getNombresJugadoresGlobal());
             enviar.cartaDeCliente = playerView.getTope().copy(true);
+            enviar.cartasComer = 1;
             System.out.println("[Click a Baraja] Paquete enviado:\n"+enviar);
             sendMove(enviar);
             dichoUNO = false;
@@ -396,6 +399,9 @@ public class Cliente extends JFrame{
           enviar.turno = playerView.getTurno();
           enviar.accion = ServerAction.EAT;
           enviar.numCartas = playerView.getNumCartas();
+          enviar.cartasComer = 2;
+          enviar.barajaCartas = new LinkedList<>();
+          enviar.cartaDeCliente = playerView.getTope().copy(true);
           System.out.println("[Tiempo terminado para decir UNO] Paquete enviado:\n"+enviar);
           sendMove(enviar);
           temp.stop();

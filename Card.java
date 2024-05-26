@@ -182,7 +182,7 @@ public class Card extends JPanel implements MouseListener {
   public boolean isValid(Card card) {
     if(card == null)
       return false;
-    if(this.getColorInt() == CardColor.BLACK)
+    if(this.getColorInt() == CardColor.BLACK || card.getColorInt() == CardColor.BLACK)
       return true;
     return card.getCardType().equals(this.getCardType()) || card.getColorInt() == this.getColorInt();
   }

@@ -8,6 +8,7 @@ public class PacketData implements Serializable{
   public ServerAction accion; 
   public Card cartaDeCliente; // carta que se le envia al servidor desde el cliente
   public int numCartas; // numero de cartas de un cliente
+  public int cartasComer; // cartas a comer
 
   public Card cartaInicial;
 
