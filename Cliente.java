@@ -227,6 +227,7 @@ public class Cliente extends JFrame{
                   paqueteEnviar.numCartas = playerView.getNumCartas();
                   paqueteEnviar.turno = playerView.getTurno();
                   System.out.println("[El Jugador no tiene para concatenar] Paquete enviado\n"+paqueteEnviar);
+                  new Audio("sfx/comer.wav", 0.6f);
                   sendMove(paqueteEnviar);
                 }
                 // Si el jugador respondio que no quiere concatenar
@@ -238,6 +239,7 @@ public class Cliente extends JFrame{
                   paqueteEnviar.numCartas = playerView.getNumCartas();
                   paqueteEnviar.turno = playerView.getTurno();
                   System.out.println("[Seleccion NO o CANCEL] Paquete enviado\n"+paqueteEnviar);
+                  new Audio("sfx/comer.wav", 0.8f);
                   sendMove(paqueteEnviar);
                 }
               }
@@ -253,6 +255,7 @@ public class Cliente extends JFrame{
             paqueteEnviar.numCartas = playerView.getNumCartas();
             paqueteEnviar.turno = playerView.getTurno();
             System.out.println("[Seleccion -10] Paquete enviado\n"+paqueteEnviar);
+            new Audio("sfx/comer.wav", 0.8f);
             sendMove(paqueteEnviar);
           }
         break;
@@ -374,7 +377,7 @@ public class Cliente extends JFrame{
   private void temporizadorCartas() {
     System.out.println("JUGADOR:" + username + " | Cartas: " + playerView.getNumCartas());       
     if(!dichoUNO && playerView.getNumCartas() == 1) {
-      int duracion = 400; // 4 segundos
+      int duracion = 400;
       playerView.getUnoButton().setEnabled(true);
               
       temp = new javax.swing.Timer(1, (e) -> {
@@ -400,10 +403,12 @@ public class Cliente extends JFrame{
           if(time % 50 == 0) {
             playerView.getUnoButton().setBackground(Color.RED);
             playerView.getUnoButton().setForeground(Color.WHITE);
+            new Audio("sfx/clock.wav", 0.2f);
           }
           if(time % 100 == 0) {
             playerView.getUnoButton().setBackground(Color.ORANGE);
             playerView.getUnoButton().setForeground(Color.BLACK);
+            new Audio("sfx/clock.wav", 0.2f);
           }
           time++;
       });
