@@ -179,7 +179,7 @@ public class Server extends JFrame {
             paqueteComer.accion = ServerAction.EAT;
             paqueteComer.turno = jugadorActual;
             paqueteComer.cartaDeCliente = Movement.cartaDeCliente.copy(true);
-            paqueteComer.direccion= direccion;
+            paqueteComer.direccion = direccion;
             paqueteComer.globalNumCartas = new ArrayList<>(numCartasJugadores);
             paqueteComer.apodosJugadores = (ArrayList<String>) apodos.clone();
             if(baraja.size() <= 4)
