@@ -19,7 +19,7 @@ public class Server extends JFrame {
   private static int jugadorActual = 0;
   private JButton iniciar;
   private static int direccion = 1;
-  private final int numCartasIniciales = 2;
+  private final int numCartasIniciales = 7;
 
   private static Stack<Card> baraja;
 
@@ -185,11 +185,11 @@ public class Server extends JFrame {
             if(baraja.size() <= 4)
               baraja = Card.generarBaraja();
             int cartasAComer = carta.getCardType() == CardType.WILD_EAT ? 4 : 2;
-            LinkedList<Card> cartasEnviadas = new LinkedList<>(paqueteComer.barajaCartas);
+            LinkedList<Card> cartasEnviadas = new LinkedList<>(paqueteComer.barajaCartas); // aqui hay un problema
             // Se suman las cartas
             cartasEnviadas.addAll(Card.comerCartas(baraja, cartasAComer));
 
-            paqueteComer.barajaCartas = cartasEnviadas;
+            paqueteComer.barajaCartas = new LinkedList<>(cartasEnviadas);
             ClientHandler.sendPacketToClientFromServer(paqueteComer, jugadorActual);
           }
         break;
@@ -217,13 +217,19 @@ public class Server extends JFrame {
         case EAT:
           if(!baraja.isEmpty())
             baraja = Card.generarBaraja();
+          Card c = baraja.pop();
 
-          Movement.cartaDeCliente = baraja.pop();
+          PacketData nuevoPaquete = new PacketData();
+          nuevoPaquete.turno = Movement.turno;
+          nuevoPaquete.accion = ServerAction.EAT;
+          nuevoPaquete.nombre = "Servidor";
+          nuevoPaquete.cartaDeCliente = c.copy(true);
+          ClientHandler.sendPacketToClientFromServer(nuevoPaquete, nuevoPaquete.turno);
+
+          Movement.cartaDeCliente = c.copy(true);
           //Movement.turno = jugadorActual;
-          Movement.accion = ServerAction.EAT;
           Movement.nombre = "Servidor";
-          ClientHandler.sendPacketToClientFromServer(Movement, Movement.turno);
-          Movement.accion = ServerAction.PASS;
+          Movement.accion = ServerAction.UPDATE_INFO;
         break;
   
         case UNO:

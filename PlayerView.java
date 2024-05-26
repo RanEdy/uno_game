@@ -258,7 +258,7 @@ public class PlayerView extends JPanel {
       toPilaAnimation(copia, cartaPos, pilaPos);
       PacketData paqueteEnviar = new PacketData();
       paqueteEnviar.accion = ServerAction.THROW_CARD;
-      paqueteEnviar.cartaDeCliente = cartaSeleccionada;
+      paqueteEnviar.cartaDeCliente = cartaSeleccionada.copy(true);
       paqueteEnviar.nombre = username;
       paqueteEnviar.numCartas = getNumCartas();
       paqueteEnviar.turno = turno;
