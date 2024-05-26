@@ -185,7 +185,8 @@ public class Server extends JFrame {
             if(baraja.size() <= 4)
               baraja = Card.generarBaraja();
             int cartasAComer = carta.getCardType() == CardType.WILD_EAT ? 4 : 2;
-            LinkedList<Card> cartasEnviadas = new LinkedList<>(paqueteComer.barajaCartas); // aqui hay un problema
+            
+            LinkedList<Card> cartasEnviadas = new LinkedList<>(Movement.barajaCartas); // aqui hay un problema
             // Se suman las cartas
             cartasEnviadas.addAll(Card.comerCartas(baraja, cartasAComer));
 
@@ -196,6 +197,7 @@ public class Server extends JFrame {
 
         // Pasar turno
         case PASS:
+        System.out.println("Jugador actual: " + apodos.get(jugadorActual) + " vs Juagador recibido: " + Movement.nombre);
           siguienteTurno();
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
           Movement.apodosJugadores = (ArrayList<String>) apodos.clone();
@@ -218,16 +220,27 @@ public class Server extends JFrame {
           if(!baraja.isEmpty())
             baraja = Card.generarBaraja();
           Card c = baraja.pop();
+          numCartasJugadores.set(Movement.turno, Movement.numCartas);
+          Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
 
           PacketData nuevoPaquete = new PacketData();
           nuevoPaquete.turno = Movement.turno;
           nuevoPaquete.accion = ServerAction.EAT;
           nuevoPaquete.nombre = "Servidor";
           nuevoPaquete.cartaDeCliente = c.copy(true);
+          nuevoPaquete.apodosJugadores = (ArrayList<String>) apodos.clone();
+          nuevoPaquete.globalNumCartas = new ArrayList<Integer>(numCartasJugadores);
           ClientHandler.sendPacketToClientFromServer(nuevoPaquete, nuevoPaquete.turno);
 
+          // Si el jugador tenia una carta valida para poner, pero decidio comer entonces se pasa su turno
+          for(Card card : Movement.barajaCartas) {
+            if(card.isValid(Movement.cartaDeCliente)) {
+              siguienteTurno();
+              break;
+            }
+          }
           Movement.cartaDeCliente = c.copy(true);
-          //Movement.turno = jugadorActual;
+          Movement.turno = jugadorActual;
           Movement.nombre = "Servidor";
           Movement.accion = ServerAction.UPDATE_INFO;
         break;

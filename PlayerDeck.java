@@ -224,6 +224,8 @@ public class PlayerDeck extends JPanel {
     return cartasLista.size();
   }
 
+  public LinkedList<Card> getCartasLista() { return cartasLista; }
+
   public boolean buscarTipo(Card c) {
     for(Card card : cartasLista) {
       if(c.getCardType() == card.getCardType())

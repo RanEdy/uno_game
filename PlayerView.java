@@ -213,6 +213,8 @@ public class PlayerView extends JPanel {
 
   public ArrayList<Integer> getCartasJugadores() { return numCartasJugadores; }
 
+  public ArrayList<String> getNombresJugadoresGlobal() { return nombresJugadoresGlobal; }
+
   public JLabel getBarajaSobrante() { return barajaSobrante; }
 
   public JButton[] getBotonesColor() { return botonesColor; }
@@ -222,6 +224,7 @@ public class PlayerView extends JPanel {
   public JPanel getMidPanel() { return midPanel; }
 // -------------------------------------------------------- Metodos de Acciones -------------------------------------------------------
   public void actionUpdateInfo(PacketData informacionNueva) {
+    System.out.println("Apodos jugadores: " + informacionNueva.apodosJugadores);
     ArrayList<Integer> globales = new ArrayList<>(informacionNueva.globalNumCartas);
     ArrayList<Integer> nuevasCartas = new ArrayList<>();
     for(int i = 0; i < informacionNueva.apodosJugadores.size(); i++) {
@@ -350,7 +353,7 @@ public class PlayerView extends JPanel {
 
     Point[] posicionesNombres = {
       new Point(30, getHeight()/2 + imgCartasSize/2),
-      new Point(getWidth()/2 - imgCartasSize + offset, 30), 
+      new Point(getWidth()/2 - imgCartasSize, 30), 
       new Point(getWidth() - imgCartasSize/2, getHeight()/2 + imgCartasSize/2)
 
     };
@@ -398,7 +401,7 @@ public class PlayerView extends JPanel {
               g2d.drawString(
                 ""+numCarta,
                 posicionesImagenesCartas[i].x + imgCartasSize/2 - 35,
-                posicionesImagenesCartas[i].y + imgCartasSize/2 + 30 
+                posicionesImagenesCartas[i].y + imgCartasSize/2 + 25 
                 );
             }
           }
@@ -407,7 +410,7 @@ public class PlayerView extends JPanel {
           g2d.fillRoundRect(
             posicionesNombres[i].x,
             posicionesNombres[i].y,
-            150,
+            200,
             50,
             25,
             25
