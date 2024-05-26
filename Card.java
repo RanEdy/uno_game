@@ -200,7 +200,7 @@ public class Card extends JPanel implements MouseListener {
     LinkedList<Card> cartas = new LinkedList<>();
     //Cartas comunes hasta el de Comer
     for(int i = 0; i < CardColor.MAX_COLORS-1; i++) {
-      for(double j = 0; j < CardType.valueOf("EAT").ordinal(); j+=0.5) {
+      for(double j = 0; j < CardType.valueOf("EAT").ordinal()+1; j+=0.5) {
         Card card = new Card(new CardColor(i), CardType.values()[(int)j]);
         card.escalar(0.5);
         cartas.add(card);

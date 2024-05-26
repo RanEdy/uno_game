@@ -19,6 +19,7 @@ public class Server extends JFrame {
   private static int jugadorActual = 0;
   private JButton iniciar;
   private static int direccion = 1;
+  private final int numCartasIniciales = 7;
 
   private static Stack<Card> baraja;
 
@@ -62,15 +63,14 @@ public class Server extends JFrame {
 
             PacketData paqueteEnviar = new PacketData();
             paqueteEnviar.globalNumCartas = new ArrayList<>(contadorJugadores);
-            
             // Rellenar el numero de cartas de cada jugador
             for(int n = 0; n < contadorJugadores; n++) {
-              paqueteEnviar.globalNumCartas.add(7);
-              numCartasJugadores.add(7);
+              paqueteEnviar.globalNumCartas.add(numCartasIniciales);
+              numCartasJugadores.add(numCartasIniciales);
             }
             // Se realiaza un for porque se necesita enviarle a cada cliente 7 cartas de la baraja distintas a cada uno (si se utiliza broadcastFromServer se enviarian las 7 mismas cartas a todos los jugadores)
             for(int i = 0; i < contadorJugadores; i++) {
-              paqueteEnviar.barajaCartas = Card.comerCartas(baraja, 7);
+              paqueteEnviar.barajaCartas = Card.comerCartas(baraja, numCartasIniciales);
               paqueteEnviar.cartaInicial = cartaInicial;
               paqueteEnviar.accion = ServerAction.START;
               paqueteEnviar.turno = 0;
@@ -167,22 +167,34 @@ public class Server extends JFrame {
           Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
           Movement.turno = jugadorActual;
           Movement.direccion = direccion;
+          Movement.accion = ServerAction.UPDATE_INFO;
           
+          // Si la carta tirada es un +4 o +2
           if(carta.getCardType() == CardType.WILD_EAT || carta.getCardType() == CardType.EAT) {
             // primero le actualizas la informacion al cliente de que ya es su turno
-            Movement.accion = ServerAction.UPDATE_INFO;
             ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
             // Despues le mandas a comer
-            Movement.accion = ServerAction.EAT;
+            PacketData paqueteComer = new PacketData();
+            paqueteComer.nombre = new String(Movement.nombre);
+            paqueteComer.accion = ServerAction.EAT;
+            paqueteComer.turno = jugadorActual;
+            paqueteComer.cartaDeCliente = Movement.cartaDeCliente.copy(true);
+            paqueteComer.direccion= direccion;
+            paqueteComer.globalNumCartas = new ArrayList<>(numCartasJugadores);
+            paqueteComer.apodosJugadores = (ArrayList<String>) apodos.clone();
             if(baraja.size() <= 4)
               baraja = Card.generarBaraja();
             int cartasAComer = carta.getCardType() == CardType.WILD_EAT ? 4 : 2;
-            Movement.barajaCartas = Card.comerCartas(baraja, cartasAComer);
-            ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
+            LinkedList<Card> cartasEnviadas = new LinkedList<>(paqueteComer.barajaCartas);
+            // Se suman las cartas
+            cartasEnviadas.addAll(Card.comerCartas(baraja, cartasAComer));
+            
+            paqueteComer.barajaCartas = cartasEnviadas;
+            ClientHandler.sendPacketToClientFromServer(paqueteComer, jugadorActual);
           }
-          Movement.accion = ServerAction.UPDATE_INFO;
         break;
 
+        // Pasar turno
         case PASS:
           siguienteTurno();
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
@@ -207,10 +219,10 @@ public class Server extends JFrame {
             baraja = Card.generarBaraja();
 
           Movement.cartaDeCliente = baraja.pop();
-          Movement.turno = jugadorActual;
+          //Movement.turno = jugadorActual;
           Movement.accion = ServerAction.EAT;
           Movement.nombre = "Servidor";
-          ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
+          ClientHandler.sendPacketToClientFromServer(Movement, Movement.turno);
           Movement.accion = ServerAction.PASS;
         break;
   

@@ -232,6 +232,13 @@ public class PlayerDeck extends JPanel {
     return false;
   }
 
+  public boolean buscarValida(Card c) {
+    for(Card card : cartasLista)
+      if(c.isValid(card))
+        return true;
+    return false;
+  }
+
   private void updateListeners() {
     for(Card c : cartasLista) {
       for(MouseListener ml : mouseListeners) {

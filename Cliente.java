@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.Timer;
+
 import java.util.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -18,6 +20,11 @@ public class Cliente extends JFrame{
     private boolean connected = true;
     private ManejadorMesa mesa;
     private PlayerView playerView;
+    private javax.swing.Timer temp;
+    private boolean dichoUNO = false;
+    private int time = 0;
+    private Card cartaSeleccionada;
+    private LinkedList<Card> cartasAcumuladas = new LinkedList<>();
     
     public Cliente(Socket socket, String username){
         super("[ Jugador ]");
@@ -195,32 +202,37 @@ public class Cliente extends JFrame{
           playerView.actionUpdateInfo(paquete);
         break;
 
-        case THROW_CARD:
-          
-            System.out.println("1");
-        break;
-
         case EAT:
           int seleccion = -10;
           PacketData paqueteEnviar = new PacketData();
+          dichoUNO = false;
+          // Si el paquete es del servidor 
           if(!paquete.nombre.equals("Servidor")) {
             if(paquete.cartaDeCliente != null) {
               if(paquete.cartaDeCliente.getCardType() == CardType.EAT || paquete.cartaDeCliente.getCardType() == CardType.WILD_EAT) {
                 if(playerView.getPlayerDeck().buscarTipo(paquete.cartaDeCliente)) {
-                  seleccion = JOptionPane.showConfirmDialog(null, "Tienes al menos 1 carta disponible para concatenar, ¿Desea hacerlo?");
+                  seleccion = JOptionPane.showConfirmDialog(null, 
+                  "Tienes al menos 1 carta disponible para concatenar, ¿Desea hacerlo?",
+                   "Concatenar", 
+                   JOptionPane.YES_NO_OPTION
+                   );
+                   cartasAcumuladas = new LinkedList<>(paquete.barajaCartas);
                 }
+                // Si el jugador no tiene cartas para concatenar
                 else {
-                  playerView.getPlayerDeck().addCard(paquete.barajaCartas);
+                  playerView.getPlayerDeck().addCard(new LinkedList<>(paquete.barajaCartas));
+                  paqueteEnviar.cartaDeCliente = playerView.getTope().copy(true);
                   paqueteEnviar.accion = ServerAction.PASS;
                   paqueteEnviar.nombre = username;
                   paqueteEnviar.numCartas = playerView.getNumCartas();
                   paqueteEnviar.turno = playerView.getTurno();
-                  System.out.println("[El Usuario no tiene para concatenar] Paquete enviado\n"+paqueteEnviar);
+                  System.out.println("[El Jugador no tiene para concatenar] Paquete enviado\n"+paqueteEnviar);
                   sendMove(paqueteEnviar);
                 }
-                // Si el usuario respondio que no
+                // Si el jugador respondio que no quiere concatenar
                 if (seleccion == JOptionPane.NO_OPTION || seleccion == JOptionPane.CANCEL_OPTION) {
-                  playerView.getPlayerDeck().addCard(paquete.barajaCartas);
+                  playerView.getPlayerDeck().addCard(new LinkedList<>(paquete.barajaCartas));
+                  paqueteEnviar.cartaDeCliente = playerView.getTope().copy(true);
                   paqueteEnviar.accion = ServerAction.PASS;
                   paqueteEnviar.nombre = username;
                   paqueteEnviar.numCartas = playerView.getNumCartas();
@@ -243,10 +255,6 @@ public class Cliente extends JFrame{
             System.out.println("[Seleccion -10] Paquete enviado\n"+paqueteEnviar);
             sendMove(paqueteEnviar);
           }
-        break;
-
-        case UNO:
-        System.out.println("8");                    
         break;
 
         case NEW_ELEMENTS:
@@ -272,53 +280,70 @@ public class Cliente extends JFrame{
     SwingUtilities.invokeLater(() -> {
       mesa = new ManejadorMesa(paquete);
       playerView = mesa.playerView;
-      // Añadir listener para cuando hagas click en todas las cartas de tu baraja
-      playerView.getPlayerDeck().addCardMouseListener(new MouseAdapter() {
+      MouseListener ml = new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-          Card cartaSeleccionada = (Card) e.getSource();
+          cartaSeleccionada = (Card) e.getSource();
           // Si el turno del jugador coincide con el turno que tiene el servidor
           if(playerView.getTurno() == playerView.turnoGlobal) {
             //Para cartas comunes
             if(cartaSeleccionada.getColorInt() != CardColor.BLACK) {
-              PacketData enviar = playerView.actionTirarCartaComun(cartaSeleccionada, this);
+              PacketData enviar = playerView.actionTirarCartaComun(cartaSeleccionada, this, cartasAcumuladas);
               if(enviar != null) sendMove(enviar);
+              temporizadorCartas();
             }
-            // Para cartas de color
+            // Para cartas de color negro
             else {
-              MouseListener ml = this;
               // Se Muestra la opcion de colores
               playerView.seleccionarColor();
-              int[] colores = { CardColor.RED, CardColor.BLUE, CardColor.YELLOW, CardColor.GREEN };
-              // Se colocan los listeners para cada boton
-              for(JButton b : playerView.getBotonesColor()) {
-                if(b.getActionListeners().length > 0)
-                  b.removeActionListener(b.getActionListeners()[0]);
-                
-                b.addActionListener((event) -> {
-                  int color = colores[Integer.parseInt(b.getName())];
-                  cartaSeleccionada.setColor(new CardColor(color));
-
-                  playerView.getMidPanel().setVisible(false);
-                  playerView.getPlayerDeck().setVisible(true);
-                  playerView.actionTirarCartaEspecial(cartaSeleccionada, ml);
-                  playerView.getPlayerDeck().removeCard(cartaSeleccionada);
-
-                  PacketData paqueteEnviar = new PacketData();
-                  paqueteEnviar.accion = ServerAction.THROW_CARD;
-                  paqueteEnviar.cartaDeCliente = cartaSeleccionada;
-                  paqueteEnviar.nombre = username;
-                  paqueteEnviar.numCartas = playerView.getNumCartas();
-                  paqueteEnviar.turno = playerView.getTurno();
-                  
-                  sendMove(paqueteEnviar);
-                });
-              }
-            }
+            } 
           }
         }
+      };
+      
+      // Listener para el boton de UNO
+      playerView.getUnoButton().addActionListener((x) -> {
+        ((JButton) x.getSource()).setEnabled(false);
+        dichoUNO = true;
       });
 
+
+      int[] colores = { CardColor.RED, CardColor.BLUE, CardColor.YELLOW, CardColor.GREEN };
+      // Se colocan los listeners para cada boton
+      for(JButton b : playerView.getBotonesColor()) {
+        if(b.getActionListeners().length > 0)
+          b.removeActionListener(b.getActionListeners()[0]);
+                
+        b.addActionListener((event) -> {
+          int color = colores[Integer.parseInt(b.getName())];
+          cartaSeleccionada.setColor(new CardColor(color));
+
+          playerView.getMidPanel().setVisible(false);
+          playerView.getPlayerDeck().setVisible(true);
+          playerView.actionTirarCartaEspecial(cartaSeleccionada, ml);
+          System.out.println("PlayerDeck removed antes: " + playerView.getNumCartas());
+          playerView.getPlayerDeck().removeCard(cartaSeleccionada);
+          System.out.println("PlayerDeck removed despues: " + playerView.getNumCartas());
+                    
+          PacketData paqueteEnviar = new PacketData();
+          paqueteEnviar.accion = ServerAction.THROW_CARD;
+          paqueteEnviar.cartaDeCliente = cartaSeleccionada;
+          paqueteEnviar.nombre = username;
+          paqueteEnviar.numCartas = playerView.getNumCartas();
+          paqueteEnviar.turno = playerView.getTurno();
+          paqueteEnviar.barajaCartas = new LinkedList<>();
+                    
+          sendMove(paqueteEnviar);
+
+          temporizadorCartas();
+        });
+      }
+
+      // Añadir listener para cuando hagas click en todas las cartas de tu baraja
+      playerView.getPlayerDeck().addCardMouseListener(ml);
+      
+
+      // Cuando le haces click a la baraja para comer
       JLabel barajaSobrante = playerView.getBarajaSobrante();
       barajaSobrante.addMouseListener(new MouseAdapter() {
         @Override
@@ -332,11 +357,58 @@ public class Cliente extends JFrame{
             enviar.numCartas = playerView.getNumCartas();
             System.out.println("[Click a Baraja] Paquete enviado:\n"+enviar);
             sendMove(enviar);
+            // Si es tu turno y tenias una carta valida para poner, pero decidiste comer, entonces tu turno es pasado
+            if(playerView.getPlayerDeck().buscarValida(playerView.getTope())) {
+              enviar.accion = ServerAction.PASS;
+              System.out.println("[Click a Baraja - Pasa Turno] Paquete enviado:\n"+enviar);
+              sendMove(enviar);
+            }
+            dichoUNO = false;
           }
         }
       });
     });
 
+  }
+
+  private void temporizadorCartas() {
+    System.out.println("JUGADOR:" + username + " | Cartas: " + playerView.getNumCartas());       
+    if(!dichoUNO && playerView.getNumCartas() == 1) {
+      int duracion = 400; // 4 segundos
+      playerView.getUnoButton().setEnabled(true);
+              
+      temp = new javax.swing.Timer(1, (e) -> {
+        if(dichoUNO) {
+          temp.stop();
+          time = 0;
+        }
+                  
+        if(time >= duracion) {
+          playerView.getUnoButton().setEnabled(false);
+          playerView.getUnoButton().setBackground(Color.ORANGE);
+          PacketData enviar = new PacketData();
+          enviar.nombre = username;
+          enviar.globalNumCartas = new ArrayList<>(playerView.getCartasJugadores());
+          enviar.turno = playerView.getTurno();
+          enviar.accion = ServerAction.EAT;
+          enviar.numCartas = playerView.getNumCartas();
+          System.out.println("[Tiempo terminado para decir UNO] Paquete enviado:\n"+enviar);
+          sendMove(enviar);
+          temp.stop();
+          time = 0;
+          }
+          if(time % 50 == 0) {
+            playerView.getUnoButton().setBackground(Color.RED);
+            playerView.getUnoButton().setForeground(Color.WHITE);
+          }
+          if(time % 100 == 0) {
+            playerView.getUnoButton().setBackground(Color.ORANGE);
+            playerView.getUnoButton().setForeground(Color.BLACK);
+          }
+          time++;
+      });
+      temp.start();
+    }
   }
     
     

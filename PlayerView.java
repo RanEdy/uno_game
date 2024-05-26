@@ -111,11 +111,13 @@ public class PlayerView extends JPanel {
       @Override
       public void mouseEntered(MouseEvent e) {
         setCursor(new Cursor(Cursor.HAND_CURSOR));
+        barajaSobrante.setBorder(BorderFactory.createLineBorder(Color.ORANGE, 6, true));
       }
 
       @Override
       public void mouseExited(MouseEvent e) {
         setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        barajaSobrante.setBorder(null);
       }
     });
 
@@ -148,7 +150,7 @@ public class PlayerView extends JPanel {
 
   private void initInfoBottomPanel() {
     Font font = new Font("SansSerif", Font.BOLD, 25);
-    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.LEADING, 35, 0));
+    infoBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 35, 0));
     infoBottomPanel.setSize(getWidth(), 50);
     infoBottomPanel.setOpaque(false);
     infoBottomPanel.setLocation(0, getHeight()-70);
@@ -171,14 +173,15 @@ public class PlayerView extends JPanel {
     for(String s : nombresJugadoresGlobal) {
       orden += s + " => ";
     }
-    JLabel ordenLabel = new JLabel("ORDEN: " + orden + nombresJugadoresGlobal.get(0) + "       ");
+    JLabel ordenLabel = new JLabel("ORDEN: " + orden + nombresJugadoresGlobal.get(0) + "  ");
     ordenLabel.setFont(new Font("Consolas", Font.PLAIN, 18));
     ordenLabel.setForeground(Color.WHITE);
 
-    infoBottomPanel.add(ordenLabel);
+    
     infoBottomPanel.add(nombreDeUsuario);
     infoBottomPanel.add(unoButton);
     infoBottomPanel.add(nombreTurnoActual);
+    infoBottomPanel.add(ordenLabel);
 
     add(infoBottomPanel);
   }
@@ -214,6 +217,8 @@ public class PlayerView extends JPanel {
 
   public JButton[] getBotonesColor() { return botonesColor; }
 
+  public JButton getUnoButton() { return unoButton; }
+
   public JPanel getMidPanel() { return midPanel; }
 // -------------------------------------------------------- Metodos de Acciones -------------------------------------------------------
   public void actionUpdateInfo(PacketData informacionNueva) {
@@ -238,7 +243,7 @@ public class PlayerView extends JPanel {
 
   }
 
-  public PacketData actionTirarCartaComun(Card cartaSeleccionada, MouseListener listenerCarta) {
+  public PacketData actionTirarCartaComun(Card cartaSeleccionada, MouseListener listenerCarta, LinkedList<Card> cartasAcumuladas) {
     Point cartaPos = cartaSeleccionada.getLocationOnScreen();
     if(cartaSeleccionada.isValid(topeDePilaDeTiradas)) {
       cartaSeleccionada.removeMouseListener(listenerCarta);
@@ -257,6 +262,7 @@ public class PlayerView extends JPanel {
       paqueteEnviar.nombre = username;
       paqueteEnviar.numCartas = getNumCartas();
       paqueteEnviar.turno = turno;
+      paqueteEnviar.barajaCartas = new LinkedList<>(cartasAcumuladas);
       return paqueteEnviar;
       // Push al server de tirar carta
     }
@@ -379,12 +385,22 @@ public class PlayerView extends JPanel {
               100
               );
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Consolas", Font.BOLD, 90));
-            g2d.drawString(
-              ""+numCarta,
-              posicionesImagenesCartas[i].x + imgCartasSize/2 - 22,
-              posicionesImagenesCartas[i].y + imgCartasSize/2 + 30 
-              );
+            if(numCarta <= 9) {
+              g2d.setFont(new Font("Consolas", Font.BOLD, 90));
+              g2d.drawString(
+                ""+numCarta,
+                posicionesImagenesCartas[i].x + imgCartasSize/2 - 22,
+                posicionesImagenesCartas[i].y + imgCartasSize/2 + 30 
+                );
+            }
+            else {
+              g2d.setFont(new Font("Consolas", Font.BOLD, 70));
+              g2d.drawString(
+                ""+numCarta,
+                posicionesImagenesCartas[i].x + imgCartasSize/2 - 35,
+                posicionesImagenesCartas[i].y + imgCartasSize/2 + 30 
+                );
+            }
           }
           // Pintar los nombres de cada jugador
           g2d.setColor(Color.BLACK);
