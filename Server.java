@@ -19,7 +19,7 @@ public class Server extends JFrame {
   private static int jugadorActual = 0;
   private JButton iniciar;
   private static int direccion = 1;
-  private final int numCartasIniciales = 2;
+  private final int numCartasIniciales = 7;
 
   private static Stack<Card> baraja;
 
