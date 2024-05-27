@@ -380,7 +380,7 @@ public class Cliente extends JFrame{
   private void temporizadorCartas() {
     System.out.println("JUGADOR:" + username + " | Cartas: " + playerView.getNumCartas());       
     if(!dichoUNO && playerView.getNumCartas() == 1) {
-      int duracion = 400;
+      int duracion = 300;
       playerView.getUnoButton().setEnabled(true);
               
       temp = new javax.swing.Timer(1, (e) -> {
@@ -409,12 +409,12 @@ public class Cliente extends JFrame{
           if(time % 50 == 0) {
             playerView.getUnoButton().setBackground(Color.RED);
             playerView.getUnoButton().setForeground(Color.WHITE);
-            new Audio("sfx/clock.wav", 0.2f);
+            new Audio("sfx/clock.wav", 0.1f);
           }
           if(time % 100 == 0) {
             playerView.getUnoButton().setBackground(Color.ORANGE);
             playerView.getUnoButton().setForeground(Color.BLACK);
-            new Audio("sfx/clock.wav", 0.2f);
+            new Audio("sfx/clock.wav", 0.1f);
           }
           time++;
       });
