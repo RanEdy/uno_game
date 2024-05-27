@@ -100,6 +100,7 @@ public class Server extends JFrame {
     try {
       while(!serverSocket.isClosed()) {
         Socket socket = serverSocket.accept();
+        
         if(!comenzar && contadorJugadores < 4){
           contadorJugadores ++;
           System.out.println("Cliente conectado " + socket.getInetAddress().getHostAddress());
@@ -171,6 +172,7 @@ public class Server extends JFrame {
           // Si la carta tirada es un +4 o +2
           if(carta.getCardType() == CardType.WILD_EAT || carta.getCardType() == CardType.EAT) {
             // primero le actualizas la informacion al cliente de que ya es su turno
+
             ClientHandler.sendPacketToClientFromServer(Movement, jugadorActual);
             // Despues le mandas a comer
             PacketData paqueteComer = new PacketData();
@@ -186,8 +188,10 @@ public class Server extends JFrame {
             int cartasAComer = carta.getCardType() == CardType.WILD_EAT ? 4 : 2;
             
             LinkedList<Card> cartasEnviadas = new LinkedList<>(Movement.barajaCartas); // aqui hay un problema
+            System.out.println("Cartas recibidas para comer: " + cartasEnviadas.size());
             // Se suman las cartas
             cartasEnviadas.addAll(Card.comerCartas(baraja, cartasAComer));
+            System.out.println("Cartas concatenadas para comer: " + cartasEnviadas.size());
 
             paqueteComer.barajaCartas = new LinkedList<>(cartasEnviadas);
             ClientHandler.sendPacketToClientFromServer(paqueteComer, jugadorActual);
@@ -222,6 +226,7 @@ public class Server extends JFrame {
           for(int i = 0; i < Movement.cartasComer; i++) {
             cartasComidas.add(baraja.pop());
           }
+          System.out.println("Cartas a comer: " + cartasComidas.size());
           numCartasJugadores.set(Movement.turno, Movement.numCartas);
           Movement.globalNumCartas = new ArrayList<>(numCartasJugadores);
 

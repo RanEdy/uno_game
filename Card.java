@@ -46,10 +46,6 @@ public class Card extends JPanel implements MouseListener {
   private Point originalPos;
   private boolean isCursorOverCard = false;
 
-  // Variables de audio para efectos de sonido
-  private Audio hoverFx;
-  private Audio selectFx;
-
   // Variables para el icono de en medio y para los de las esquinas
   private ImageIcon miniIcon, iconType;
   private JLabel miniTop, miniBot, mid;
@@ -296,7 +292,7 @@ public class Card extends JPanel implements MouseListener {
     if(isJugable) {
       time = 0;
       animTimer.stop();
-      selectFx = new Audio("sfx/select3.wav", 0.8f);
+      new Audio("sfx/select3.wav", 0.8f);
     }
   }
 
@@ -312,7 +308,7 @@ public class Card extends JPanel implements MouseListener {
       selectBorder = BorderFactory.createLineBorder(Color.YELLOW, 2, true);
       setBorder(selectBorder);
       if(!animTimer.isRunning()) {
-        hoverFx = new Audio("sfx/hover2.wav", 0.8f);
+        new Audio("sfx/hover2.wav", 0.8f);
         hoverTargetPos = new Point(originalPos.x, originalPos.y - hover_Y);
         hoverAnimacion(originalPos, hoverTargetPos, !isCursorOverCard);
       }

@@ -25,6 +25,7 @@ public class PlayerView extends JPanel {
   private JLabel nombreTurnoActual;
   private JButton unoButton;
   private JLabel barajaSobrante;
+  private JLabel ordenLabel;
 
   private JButton botonesColor[] = new JButton[4];
 
@@ -169,11 +170,8 @@ public class PlayerView extends JPanel {
     nombreTurnoActual.setForeground(Color.WHITE);
     actualizarNombreTurnoActual();
 
-    String orden = "";
-    for(String s : nombresJugadoresGlobal) {
-      orden += s + " => ";
-    }
-    JLabel ordenLabel = new JLabel("ORDEN: " + orden + nombresJugadoresGlobal.get(0) + "  ");
+    ordenLabel = new JLabel("");
+    actualizarOrden();
     ordenLabel.setFont(new Font("Consolas", Font.PLAIN, 18));
     ordenLabel.setForeground(Color.WHITE);
 
@@ -184,6 +182,15 @@ public class PlayerView extends JPanel {
     infoBottomPanel.add(ordenLabel);
 
     add(infoBottomPanel);
+  }
+
+  private void actualizarOrden() {
+    String orden = "";
+    for(String s : nombresJugadoresGlobal) {
+      orden += s;
+      orden += direccion > 0 ? " => " : " <= ";
+    }
+    ordenLabel.setText("ORDEN: " + orden + nombresJugadoresGlobal.get(0) + "  ");
   }
 
   private void actualizarNombreTurnoActual() {
@@ -241,6 +248,7 @@ public class PlayerView extends JPanel {
     cartaRecibida.setJugable(false);
     cartaRecibida.removeMouseListener(cartaRecibida);
     actualizarNombreTurnoActual();
+    actualizarOrden();
     setTope(cartaRecibida);
     repaint();
 
@@ -353,8 +361,8 @@ public class PlayerView extends JPanel {
 
     Point[] posicionesNombres = {
       new Point(30, getHeight()/2 + imgCartasSize/2),
-      new Point(getWidth()/2 - imgCartasSize, 30), 
-      new Point(getWidth() - imgCartasSize/2, getHeight()/2 + imgCartasSize/2)
+      new Point(getWidth()/2 - imgCartasSize-30, 30), 
+      new Point(getWidth() - imgCartasSize/2-50, getHeight()/2 + imgCartasSize/2)
 
     };
 
@@ -410,7 +418,7 @@ public class PlayerView extends JPanel {
           g2d.fillRoundRect(
             posicionesNombres[i].x,
             posicionesNombres[i].y,
-            200,
+            240,
             50,
             25,
             25

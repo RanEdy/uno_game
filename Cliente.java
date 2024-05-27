@@ -1,5 +1,4 @@
 import javax.swing.*;
-import javax.swing.Timer;
 
 import java.util.*;
 import java.awt.*;
@@ -49,7 +48,7 @@ public class Cliente extends JFrame{
                 JOptionPane.showMessageDialog(null, "No has introducido ningun nombre", 
                 "Error de inicio", JOptionPane.ERROR_MESSAGE);
                 valido = false;
-            } else if(nombre.length()>30){
+            } else if(nombre.length()>15){
                 JOptionPane.showMessageDialog(null, "Has introducido un nombre muy largo", 
                 "Error de inicio", JOptionPane.ERROR_MESSAGE);
                 valido = false;

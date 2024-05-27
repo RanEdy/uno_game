@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 
 import javax.swing.*;
@@ -303,8 +304,41 @@ public class PlayerDeck extends JPanel {
   }
 
   private void ordenarColor() {
-    Collections.sort(cartasLista, Card.getColorComparator());
+    //Collections.sort(cartasLista, Card.getColorComparator());
+    quickSort(cartasLista);
     update();
+  }
+
+  public void quickSort(LinkedList<Card> list) {
+      quickSort(list, 0, list.size() - 1, Card.getColorComparator());
+  }
+
+  private void quickSort(LinkedList<Card> list, int low, int high, Comparator<Card> comparator) {
+      if (low < high) {
+          int pi = partition(list, low, high, comparator);
+          quickSort(list, low, pi - 1, comparator);
+          quickSort(list, pi + 1, high, comparator);
+      }
+  }
+
+  private int partition(LinkedList<Card> list, int low, int high, Comparator<Card> comparator) {
+      Card pivot = list.get(high);
+      int i = low - 1; 
+
+      for (int j = low; j < high; j++) {
+          if (comparator.compare(list.get(j), pivot) <= 0) {
+              i++;
+              Card temp = list.get(i);
+              list.set(i, list.get(j));
+              list.set(j, temp);
+          }
+      }
+      
+      Card temp = list.get(i + 1);
+      list.set(i + 1, list.get(high));
+      list.set(high, temp);
+
+      return i + 1;
   }
 
   private void ordenarTipo() {
