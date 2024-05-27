@@ -36,7 +36,6 @@ public class PlayerDeck extends JPanel {
 
   private Font miniFont = new Font("Consolas", Font.BOLD, 14);
 
-  private Audio ordenarFx, cambiarFx;
 
   public PlayerDeck(LinkedList<Card> cartasIniciales) {
     super();
@@ -66,7 +65,7 @@ public class PlayerDeck extends JPanel {
     izq.setContentAreaFilled(false);
     izq.setPreferredSize(botonesFlechasDimension);
     izq.addActionListener((e) -> { 
-      cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
+      new Audio("sfx/hover1.wav", 0.2f);
       displayPrev5();
       getParent().repaint();
     });
@@ -96,7 +95,7 @@ public class PlayerDeck extends JPanel {
     der.setPreferredSize(botonesFlechasDimension);
     der.setContentAreaFilled(false);
     der.addActionListener((e) -> { 
-      cambiarFx = new Audio("sfx/hover1.wav", 0.2f);
+      new Audio("sfx/hover1.wav", 0.2f);
       displayNext5();
       getParent().repaint(); 
     });
@@ -126,7 +125,7 @@ public class PlayerDeck extends JPanel {
     ordenarColor.setBackground(botonesColor);
     ordenarColor.setPreferredSize(botonesOrdenarDimension);
     ordenarColor.addActionListener((e) -> { 
-      ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
+      new Audio("sfx/swap1.wav", 0.8f);
       ordenarColor(); 
       getParent().repaint(); 
     });
@@ -145,7 +144,7 @@ public class PlayerDeck extends JPanel {
     ordenarTipo.setBackground(botonesColor);
     ordenarTipo.setPreferredSize(botonesOrdenarDimension);
     ordenarTipo.addActionListener((e) -> { 
-      ordenarFx = new Audio("sfx/swap1.wav", 0.8f);
+      new Audio("sfx/swap1.wav", 0.8f);
       ordenarTipo();
       getParent().repaint(); 
     });
@@ -228,12 +227,27 @@ public class PlayerDeck extends JPanel {
   public LinkedList<Card> getCartasLista() { return cartasLista; }
 
   public boolean buscarTipo(Card c) {
-    for(Card card : cartasLista) {
-      if(c.getCardType() == card.getCardType())
-        return true;
-    }
-    return false;
+    return busquedaBinaria(c, Card.getTypeComparator(), 0, cartasLista.size()-1) >=0;
   }
+
+  public int busquedaBinaria(Card cartaBuscar, Comparator<Card> comparator, int bajo, int alto) {
+    while (bajo <= alto) {
+      int medio = bajo + (alto - bajo) / 2;
+      Card cartaMedio = cartasLista.get(medio);
+
+      int comparasion = comparator.compare(cartaBuscar, cartaMedio);
+
+      if (comparasion == 0) {
+        return medio;
+      } else if (comparasion < 0) {
+        alto = medio - 1;
+      } else {
+        bajo = medio + 1;
+      }
+    }
+    return -1;
+  }
+
 
   public boolean buscarValida(Card c) {
     for(Card card : cartasLista)
@@ -342,8 +356,43 @@ public class PlayerDeck extends JPanel {
   }
 
   private void ordenarTipo() {
-    Collections.sort(cartasLista, Card.getTypeComparator());
+    shellSort(cartasLista, Card.getTypeComparator());
     update();
+  }
+
+  private void shellSort(LinkedList<Card> list, Comparator<Card> comparator) {
+    int n = list.size();
+    // Obtenemos el tamano del salto diviendo el tamano de la lista ente 2
+    for (int salto = n / 2; salto > 0; salto /= 2) {
+      // Metodo de insercion con salto
+      for (int i = salto; i < n; i++) {
+        // Guardar el elemento de lista[i] en un auxiliar;
+        Card temp = list.get(i);
+
+        // Shift earlier gap-sorted elements up until the correct location for list[i]
+        // is found
+        int j;
+        /*
+         * J inicia siendo el valor del salto
+         * hay dos condiciones que se deben cumplir
+         * 1. j siempre tiene que ser mayor o igual que el salto sino significa que esta
+         * intentando acceder a un
+         * indice negativo y se detiene.
+         * 2. se compara el valor del la carta en el indice j - salto con el valor aux,
+         * si regresa un numero mayor
+         * a 0 significa que el valor en el indice (j-salto) es mayor al valor al aux y
+         * se intercambian
+         * se decrementa el valor de j - salto.
+         */
+        for (j = i; j >= salto && comparator.compare(list.get(j - salto), temp) > 0; j -= salto) {
+          /* lista.get(0) se guarda en el indice del salto */
+          list.set(j, list.get(j - salto));
+        }
+
+        // J ahora vale j - salto, temp se guarda en ese indice.
+        list.set(j, temp);
+      }
+    }
   }
 
   private ImageIcon generarImagen(ImageIcon originalIcon, int width, int height) {
