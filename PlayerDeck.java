@@ -227,10 +227,11 @@ public class PlayerDeck extends JPanel {
   public LinkedList<Card> getCartasLista() { return cartasLista; }
 
   public boolean buscarTipo(Card c) {
+    ordenarTipo();
     return busquedaBinaria(c, Card.getTypeComparator(), 0, cartasLista.size()-1) >=0;
   }
 
-  public int busquedaBinaria(Card cartaBuscar, Comparator<Card> comparator, int bajo, int alto) {
+  private int busquedaBinaria(Card cartaBuscar, Comparator<Card> comparator, int bajo, int alto) {
     while (bajo <= alto) {
       int medio = bajo + (alto - bajo) / 2;
       Card cartaMedio = cartasLista.get(medio);
@@ -323,7 +324,7 @@ public class PlayerDeck extends JPanel {
     update();
   }
 
-  public void quickSort(LinkedList<Card> list) {
+  private void quickSort(LinkedList<Card> list) {
       quickSort(list, 0, list.size() - 1, Card.getColorComparator());
   }
 

@@ -228,7 +228,7 @@ public class Cliente extends JFrame{
                   paqueteEnviar.globalNumCartas = playerView.getCartasJugadores();
                   cartasAcumuladas.clear();
                   System.out.println("[El Jugador no tiene para concatenar] Paquete enviado\n"+paqueteEnviar);
-                  new Audio("sfx/comer.wav", 0.6f);
+                  new Audio("sfx/comer.wav", 0.8f);
                   sendMove(paqueteEnviar);
                 }
                 // Si el jugador respondio que no quiere concatenar
