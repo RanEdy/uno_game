@@ -380,7 +380,7 @@ public class Cliente extends JFrame{
   private void temporizadorCartas() {
     System.out.println("JUGADOR:" + username + " | Cartas: " + playerView.getNumCartas());       
     if(!dichoUNO && playerView.getNumCartas() == 1) {
-      int duracion = 300;
+      int duracion = 1000;
       playerView.getUnoButton().setEnabled(true);
               
       temp = new javax.swing.Timer(1, (e) -> {
