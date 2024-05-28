@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.*;
 import javax.swing.*;
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 
@@ -27,9 +28,13 @@ public class Server extends JFrame {
     super("Servidor del UNO");
     serverSocket = ss;
     apodos = new ArrayList<>();
+    String serverIP = "";
+    int serverPort = -1; 
     try {
-      System.out.println("IP: " + InetAddress.getLocalHost().getHostAddress());
-      System.out.println("Puerto: " + ss.getLocalPort());
+      serverIP = InetAddress.getLocalHost().getHostAddress();
+      System.out.println("IP: " + serverIP);
+      serverPort = ss.getLocalPort();
+      System.out.println("Puerto: " + serverPort);
     }
     catch(Exception e) {
       e.printStackTrace();
@@ -91,8 +96,29 @@ public class Server extends JFrame {
         }
     });
     //
+
+    JPanel serverInfoPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 50, 5));
+    serverInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    serverInfoPanel.setBackground(getContentPane().getBackground().darker());
+
+    JTextArea areaIP = new JTextArea("IP:  " + serverIP);
+    areaIP.setFont(new java.awt.Font("Segoe UI", 3, 22));
+    areaIP.setEditable(false);
+    areaIP.setForeground(Color.WHITE);
+    areaIP.setOpaque(false);
+    serverInfoPanel.add(areaIP);
+
+    JTextArea areaPort = new JTextArea("PUERTO:  " + serverPort);
+    areaPort.setFont(new java.awt.Font("Segoe UI", 3, 22));
+    areaPort.setEditable(false);
+    areaPort.setForeground(Color.WHITE);
+    areaPort.setOpaque(false);
+    serverInfoPanel.add(areaPort);
+
+    add(serverInfoPanel, BorderLayout.SOUTH);
+
     panel.add(iniciar, BorderLayout.CENTER);
-    setSize(500,350);
+    setSize(500,420);
     setVisible(true);
     }
 

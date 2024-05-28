@@ -2,11 +2,16 @@ import javax.swing.*;
 
 import java.util.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class Cliente extends JFrame{
     private JPanel panelBase;
@@ -421,20 +426,138 @@ public class Cliente extends JFrame{
       temp.start();
     }
   }
-    
-    
-  public static void main(String[] args){
-    String nickname = Nombre();
+
+  public static void addNewPlayer(String nickname, String ip, int port) {
     try {
-        Socket socket = new Socket("10.21.9.157", 9520);
-        Cliente cliente = new Cliente(socket, nickname);
-        cliente.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        cliente.lobby();
-        cliente.listenForMessage();
-        cliente.sendNickname();
-        // cliente.sendMove();
-      }catch(Exception e) {
-        e.printStackTrace();
-      }
+      Socket socket = new Socket(ip, port);
+      Cliente cliente = new Cliente(socket, nickname);
+      cliente.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      cliente.lobby();
+      cliente.listenForMessage();
+      cliente.sendNickname();
+    } catch(Exception e) {
+      System.out.println("[ERROR] Error al iniciar el cliente");
+      e.printStackTrace();
+    }
   }
+  
+  public static void main(String[] args) {
+
+    JFrame contenedor2 = new JFrame("Inicio de sesión - UNO");
+    contenedor2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    contenedor2.setSize(900, 600);
+    contenedor2.setResizable(false);
+    contenedor2.setLocationRelativeTo(null);
+
+    // JPanel que permite pintar nuestro JFrame de fondo
+    JPanel panelFondo = new JPanel() {
+      @Override
+      protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        ImageIcon icon = new ImageIcon("iconos/bg1.png");
+        g.drawImage(icon.getImage(), 0, 0, getWidth(), getHeight(), this);
+      }
+    };
+    panelFondo.setLayout(new BorderLayout());
+
+    // Panel base para los componentes
+    JPanel panelBase = new JPanel(new GridBagLayout());
+    panelBase.setOpaque(false);
+    panelBase.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    GridBagConstraints bordesGrid = new GridBagConstraints();
+
+    bordesGrid.insets = new Insets(10, 10, 10, 10);
+    bordesGrid.fill = GridBagConstraints.HORIZONTAL;
+
+    JLabel icono_UNO2 = new JLabel(new ImageIcon("iconos/LOGO.png"));
+    JLabel descripcionLabel = new JLabel("Ingrese el IP y puerto válido de la sala [servidor] para empezar a jugar.");
+    JTextField field1 = new JTextField(20);
+    JTextField field2 = new JTextField(20);
+    JTextField field3 = new JTextField(20);
+    JButton ingresarButton = new JButton("Ingresar");
+
+    bordesGrid.gridx = 0;
+    bordesGrid.gridy = 0;
+    bordesGrid.gridwidth = 2;
+    panelBase.add(icono_UNO2, bordesGrid);
+
+    bordesGrid.gridwidth = 1;
+    bordesGrid.gridy++;
+    bordesGrid.gridx = 0;
+    JLabel label1 = new JLabel("Nickname:");
+    label1.setFont(new java.awt.Font("Segoe UI", 1, 20));
+    label1.setForeground(Color.WHITE);
+    panelBase.add(label1, bordesGrid);
+
+    bordesGrid.gridx = 1;
+    panelBase.add(field1, bordesGrid);
+
+    bordesGrid.gridy++;
+    bordesGrid.gridx = 0;
+    JLabel label2 = new JLabel("IP:");
+    label2.setFont(new java.awt.Font("Segoe UI", 1, 20));
+    label2.setForeground(Color.WHITE);
+    panelBase.add(label2, bordesGrid);
+
+    bordesGrid.gridx = 1;
+    panelBase.add(field2, bordesGrid);
+
+    bordesGrid.gridy++;
+    bordesGrid.gridx = 0;
+    JLabel label3 = new JLabel("Puerto:");
+    label3.setFont(new java.awt.Font("Segoe UI", 1, 20));
+    label3.setForeground(Color.WHITE);
+    panelBase.add(label3, bordesGrid);
+
+    bordesGrid.gridx = 1;
+    panelBase.add(field3, bordesGrid);
+
+    bordesGrid.gridy++;
+    bordesGrid.gridx = 0;
+    bordesGrid.gridwidth = 2;
+    panelBase.add(ingresarButton, bordesGrid);
+
+    bordesGrid.gridy++;
+    descripcionLabel.setFont(new java.awt.Font("Segoe UI", 1, 16));
+    descripcionLabel.setForeground(Color.WHITE);
+    panelBase.add(descripcionLabel, bordesGrid);
+
+    ingresarButton.addActionListener(new ActionListener() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        String nickname = field1.getText();
+        String ip = field2.getText();
+        int port;
+
+        try {
+          port = Integer.parseInt(field3.getText());
+
+          if (nickname.length() > 15) {
+            throw new Exception("Has introducido un nombre muy largo");
+          }
+          // if (!ip.contains(".")) {
+          // throw new Exception("ipinvalida");
+          // }
+          if (nickname.isBlank() || ip.isBlank()) {
+            throw new Exception("No has introducido ningún nombre");
+          }
+
+          addNewPlayer(nickname, ip, port);
+          contenedor2.dispose();
+
+        } catch (NumberFormatException ex) {
+          JOptionPane.showMessageDialog(null, "Puerto no válido. Ingresa un número entero", "Error de puerto",
+              JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+          JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de inicio", JOptionPane.ERROR_MESSAGE);
+        }
+      }
+    });
+    // Agregamos el fondo con imagen bg1.png y dentro de este, el panel base con todos los componentes graficos: TextField, Label, etc.
+    panelFondo.add(panelBase, BorderLayout.CENTER);
+    contenedor2.setContentPane(panelFondo);
+    contenedor2.setVisible(true);
+  }
+    
+    
 }
