@@ -270,6 +270,7 @@ public class Cliente extends JFrame{
         break;
 
         case NEW_ELEMENTS:
+        new Audio("sfx/conexion.wav", 0.5f);
             System.out.println("SERVER> Un nuevo jugador se ha conectado");       
             ArrayList <String> nicknames = paquete.apodosJugadores;
             for(int x = 0; x < nicknames.size();  x++) {
@@ -361,6 +362,7 @@ public class Cliente extends JFrame{
         @Override
         public void mouseClicked(MouseEvent e) {
           if(playerView.getTurno() == playerView.turnoGlobal) {
+            new Audio("sfx/select2.wav", 0.5f);
             PacketData enviar = new PacketData();
             enviar.nombre = username;
             // le envio mis cartas
